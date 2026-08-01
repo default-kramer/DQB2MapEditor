@@ -102,11 +102,7 @@ public partial class MapEditorControl : UserControl
 
         if (grid.Children.Count == 0)
         {
-            var bitmaps = viewmodel.Layers.OrderBy(kvp => (int)kvp.Key)
-                .Select(kvp => kvp.Value)
-                .Concat([viewmodel.SelectionLayer]);
-
-            foreach (var bitmap in bitmaps)
+            foreach (var bitmap in viewmodel.BitmapLayers.Bitmaps())
             {
                 var image = new Image();
                 image.Source = bitmap;

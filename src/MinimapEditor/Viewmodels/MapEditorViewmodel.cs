@@ -12,12 +12,16 @@ namespace MinimapEditor.Viewmodels;
 
 sealed class MapEditorViewmodel : ViewmodelBase
 {
+    public interface IBitmapLayers
+    {
+        IEnumerable<WriteableBitmap> Bitmaps();
+    }
+
     private readonly IGrid<MinimapTile> grid;
 
     public required string CmndatPath3902 { get; init; }
     public required RawCommonData Cmndat { get; init; }
-    public required IReadOnlyDictionary<MinimapRenderer.TileLayer, WriteableBitmap> Layers { get; init; }
-    public required WriteableBitmap SelectionLayer { get; init; }
+    public required IBitmapLayers BitmapLayers { get; init; }
 
     public MapEditorViewmodel(IGrid<MinimapTile> grid, IGrid<bool> selectionGrid)
     {
