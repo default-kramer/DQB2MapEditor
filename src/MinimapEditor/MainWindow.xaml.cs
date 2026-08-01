@@ -58,7 +58,7 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
         var selectionDecorator = new SelectionGridDecorator
         {
             SelectionGrid = selectionGrid,
-            SelectionBitmap = layers.selection,
+            Repainter = layers,
         };
         selectionDecorator.Refresh(selectionGrid.Bounds);
 
@@ -79,31 +79,6 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
             {
                 ValidateShores(cmndat.GetMinimap(new IslandId(i)));
             }
-        }
-    }
-
-    /// <summary>
-    /// Decorates a selection grid and refreshes the <see cref="SelectionBitmap"/>
-    /// whenever the underlying grid is modified.
-    /// </summary>
-    sealed class SelectionGridDecorator : IGrid<bool>
-    {
-        public required IGrid<bool> SelectionGrid { get; init; }
-        public required WriteableBitmap SelectionBitmap { get; init; }
-
-        public LibDQB.Rect Bounds => SelectionGrid.Bounds;
-
-        public bool Get(XZ xz) => SelectionGrid.Get(xz);
-
-        public void Set(XZ xz, bool value)
-        {
-            SelectionGrid.Set(xz, value);
-            Refresh(new LibDQB.Rect(xz, xz.Add(1, 1)));
-        }
-
-        public void Refresh(LibDQB.Rect dirty)
-        {
-            MinimapRenderer.UpdateSelection(SelectionBitmap, SelectionGrid, dirty);
         }
     }
 
