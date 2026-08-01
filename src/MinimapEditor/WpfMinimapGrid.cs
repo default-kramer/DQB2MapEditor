@@ -1,4 +1,5 @@
 ﻿using LibDQB;
+using LibDQB.DQB2Minimap;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,17 +9,17 @@ using System.Windows.Threading;
 namespace MinimapEditor;
 
 /// <summary>
-/// Decorates a grid of minimap tiles and refreshes the <see cref="Layers"/>
+/// Decorates a grid of minimap tiles and informs the <see cref="Repainter"/>
 /// whenever the underlying grid is modified.
 /// </summary>
 sealed class WpfMinimapGrid : BatchedUpdateMinimapGrid
 {
-    public interface IBitmapLayers
+    public interface IRepainter
     {
-        IEnumerable<(MinimapRenderer.TileLayer LayerId, WriteableBitmap Bitmap)> Layers();
+        void Repaint(IReadOnlyGrid<MinimapTile> grid, Rect dirty);
     }
 
-    public required IBitmapLayers Layers { get; init; }
+    public required IRepainter Repainter { get; init; }
     public required Dispatcher Dispatcher { get; init; }
 
     protected override void EnqueueNotification()
@@ -42,9 +43,6 @@ sealed class WpfMinimapGrid : BatchedUpdateMinimapGrid
 
     private void Refresh(Rect dirtyRect)
     {
-        foreach (var item in Layers.Layers())
-        {
-            MinimapRenderer.Update(item.Bitmap, item.LayerId, base.Grid, dirtyRect);
-        }
+        Repainter.Repaint(this, dirtyRect);
     }
 }

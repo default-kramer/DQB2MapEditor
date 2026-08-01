@@ -12,13 +12,13 @@ namespace MinimapEditor;
 /// </summary>
 sealed class SelectionGridDecorator : IGrid<bool>
 {
-    public interface IBitmapRepainter
+    public interface IRepainter
     {
         void Repaint(IReadOnlyGrid<bool> selectionGrid, Rect dirty);
     }
 
     public required IGrid<bool> SelectionGrid { get; init; }
-    public required IBitmapRepainter Repainter { get; init; }
+    public required IRepainter Repainter { get; init; }
 
     public Rect Bounds => SelectionGrid.Bounds;
 

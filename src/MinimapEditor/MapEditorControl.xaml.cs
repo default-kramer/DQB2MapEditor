@@ -102,10 +102,10 @@ public partial class MapEditorControl : UserControl
 
         if (grid.Children.Count == 0)
         {
-            foreach (var bitmap in viewmodel.BitmapLayers.Bitmaps())
+            foreach (var source in viewmodel.BitmapLayers.AllLayers())
             {
                 var image = new Image();
-                image.Source = bitmap;
+                image.Source = source;
                 image.Stretch = Stretch.None;
                 grid.Children.Add(image);
             }

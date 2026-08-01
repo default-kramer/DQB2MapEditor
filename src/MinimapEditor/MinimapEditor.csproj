@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="BitmapRepainter.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\submodules\LibDQB\LibDQB\LibDQB.csproj" />
   </ItemGroup>
 

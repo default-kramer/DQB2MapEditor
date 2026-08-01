@@ -42,12 +42,12 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
             PutTestPattern(minimap);
         }
 
-        var layers = new BitmapLayers();
+        var repainter = new BitmapRepainter();
 
         var tileDecorator = new WpfMinimapGrid
         {
             Grid = minimap,
-            Layers = layers,
+            Repainter = repainter,
             Dispatcher = this.Dispatcher,
         };
 
@@ -58,7 +58,7 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
         var selectionDecorator = new SelectionGridDecorator
         {
             SelectionGrid = selectionGrid,
-            Repainter = layers,
+            Repainter = repainter,
         };
         selectionDecorator.Refresh(selectionGrid.Bounds);
 
@@ -66,7 +66,7 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
         {
             Cmndat = cmndat,
             CmndatPath3902 = cmndatPath,
-            BitmapLayers = layers,
+            BitmapLayers = repainter,
         };
 
         var control = new MapEditorControl();
