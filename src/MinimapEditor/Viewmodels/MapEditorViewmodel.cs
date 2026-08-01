@@ -7,7 +7,6 @@ using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace MinimapEditor.Viewmodels;
 
@@ -24,17 +23,17 @@ sealed class MapEditorViewmodel : ViewmodelBase
     public required RawCommonData Cmndat { get; init; }
     public required IRepainter BitmapLayers { get; init; }
 
-    public MapEditorViewmodel(IGrid<MinimapTile> grid, IGrid<bool> selectionGrid)
+    public MapEditorViewmodel(IGrid<MinimapTile> grid, IGrid<bool> selectionGrid, DataDefinitions definitions)
     {
         this.grid = grid;
 
         SelectionGrid1346 = new SelectionGridModel(selectionGrid);
 
-        BaseTileChoices8121 = MinimapRenderer.BaseTiles;
+        BaseTileChoices8121 = definitions.BaseTiles;
         SelectedBaseTile7703 = BaseTileChoices8121.SingleOrDefault(b => b.BaseTileId == 7);
         SetBaseTile7860 = true;
 
-        OverlayChoices5094 = MinimapRenderer.OverlayTiles;
+        OverlayChoices5094 = definitions.Overlays;
         SelectedOverlay3158 = OverlayChoices5094.SingleOrDefault(o => o.OverlayId == 3);
         SetOverlay3252 = true;
 

@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace MinimapEditor;
 
@@ -13,32 +12,58 @@ namespace MinimapEditor;
 /// Creates and manages the WriteableBitmaps having the same size which will
 /// be stacked on top of each other to produce the main UI.
 /// </summary>
-sealed class BitmapRepainter : MapEditorViewmodel.IRepainter
+sealed class BitmapRepainter<TLayer> : MapEditorViewmodel.IRepainter
     , WpfMinimapGrid.IRepainter
     , SelectionGridDecorator.IRepainter
+    where TLayer : ImageSource
 {
-    private readonly WriteableBitmap bitmapBase = MinimapRenderer.TODO();
-    private readonly WriteableBitmap bitmapOverlay = MinimapRenderer.TODO();
-    private readonly WriteableBitmap bitmapShroud = MinimapRenderer.TODO();
-    private readonly WriteableBitmap bitmapSelection = MinimapRenderer.TODO();
+    public interface ITilesheet
+    {
+        /// <summary>
+        /// Create a new image that can hold exactly the number of tiles specified
+        /// by <paramref name="width"/> and <paramref name="height"/>.
+        /// </summary>
+        TLayer CreateLayer(int width, int height);
+
+        void UpdateBaseTileLayer(TLayer layer, IReadOnlyGrid<MinimapTile> map, Rect dirty);
+        void UpdateOverlayLayer(TLayer layer, IReadOnlyGrid<MinimapTile> map, Rect dirty);
+        void UpdateVisibilityLayer(TLayer layer, IReadOnlyGrid<MinimapTile> map, Rect dirty);
+        void UpdateSelectionLayer(TLayer layer, IReadOnlyGrid<bool> selectionGrid, Rect dirty);
+    }
+
+    private readonly ITilesheet tilesheet;
+    private readonly TLayer layerBase;
+    private readonly TLayer layerOverlay;
+    private readonly TLayer layerVisibility;
+    private readonly TLayer layerSelection;
+
+    public BitmapRepainter(ITilesheet tilesheet)
+    {
+        this.tilesheet = tilesheet;
+        const int size = 256;
+        layerBase = tilesheet.CreateLayer(size, size);
+        layerOverlay = tilesheet.CreateLayer(size, size);
+        layerVisibility = tilesheet.CreateLayer(size, size);
+        layerSelection = tilesheet.CreateLayer(size, size);
+    }
 
     IEnumerable<ImageSource> MapEditorViewmodel.IRepainter.AllLayers()
     {
-        yield return bitmapBase;
-        yield return bitmapOverlay;
-        yield return bitmapShroud;
-        yield return bitmapSelection;
+        yield return layerBase;
+        yield return layerOverlay;
+        yield return layerVisibility;
+        yield return layerSelection;
     }
 
     void WpfMinimapGrid.IRepainter.Repaint(IReadOnlyGrid<MinimapTile> grid, Rect dirty)
     {
-        MinimapRenderer.Update(bitmapBase, MinimapRenderer.TileLayer.Base, grid, dirty);
-        MinimapRenderer.Update(bitmapOverlay, MinimapRenderer.TileLayer.Overlay, grid, dirty);
-        MinimapRenderer.Update(bitmapShroud, MinimapRenderer.TileLayer.Shroud, grid, dirty);
+        tilesheet.UpdateBaseTileLayer(layerBase, grid, dirty);
+        tilesheet.UpdateOverlayLayer(layerOverlay, grid, dirty);
+        tilesheet.UpdateVisibilityLayer(layerVisibility, grid, dirty);
     }
 
     void SelectionGridDecorator.IRepainter.Repaint(IReadOnlyGrid<bool> selectionGrid, Rect dirty)
     {
-        MinimapRenderer.UpdateSelection(bitmapSelection, selectionGrid, dirty);
+        tilesheet.UpdateSelectionLayer(layerSelection, selectionGrid, dirty);
     }
 }

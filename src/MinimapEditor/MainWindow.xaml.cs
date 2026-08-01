@@ -42,7 +42,11 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
             PutTestPattern(minimap);
         }
 
-        var repainter = new BitmapRepainter();
+        var tilesheet = SapphireRetroTilesheet.Instance;
+
+        var definitions = new DataDefinitions(tilesheet);
+
+        var repainter = new BitmapRepainter<WriteableBitmap>(tilesheet);
 
         var tileDecorator = new WpfMinimapGrid
         {
@@ -62,7 +66,7 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
         };
         selectionDecorator.Refresh(selectionGrid.Bounds);
 
-        var viewmodel = new MapEditorViewmodel(tileDecorator, selectionDecorator)
+        var viewmodel = new MapEditorViewmodel(tileDecorator, selectionDecorator, definitions)
         {
             Cmndat = cmndat,
             CmndatPath3902 = cmndatPath,
