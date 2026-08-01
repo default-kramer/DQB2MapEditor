@@ -1,0 +1,3 @@
+[submodule "submodules/LibDQB"]
+	path = submodules/LibDQB
+	url = https://github.com/default-kramer/LibDQB
