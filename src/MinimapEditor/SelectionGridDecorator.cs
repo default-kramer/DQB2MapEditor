@@ -14,7 +14,7 @@ sealed class SelectionGridDecorator : IGrid<bool>
 {
     public interface IBitmapRepainter
     {
-        void Repaint(IGrid<bool> selectionGrid, Rect dirty);
+        void Repaint(IReadOnlyGrid<bool> selectionGrid, Rect dirty);
     }
 
     public required IGrid<bool> SelectionGrid { get; init; }

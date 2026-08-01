@@ -35,7 +35,7 @@ sealed class BitmapLayers : MapEditorViewmodel.IBitmapLayers
         yield return (MinimapRenderer.TileLayer.Shroud, bitmapShroud);
     }
 
-    void SelectionGridDecorator.IBitmapRepainter.Repaint(IGrid<bool> selectionGrid, Rect dirty)
+    void SelectionGridDecorator.IBitmapRepainter.Repaint(IReadOnlyGrid<bool> selectionGrid, Rect dirty)
     {
         MinimapRenderer.UpdateSelection(bitmapSelection, selectionGrid, dirty);
     }
