@@ -26,11 +26,11 @@ sealed class MapEditorViewmodel : ViewmodelBase
         SelectionGrid1346 = new SelectionGridModel(selectionGrid);
 
         BaseTileChoices8121 = MinimapRenderer.BaseTiles;
-        SelectedBaseTile7703 = BaseTileChoices8121.SingleOrDefault(b => b.TileId == 7);
+        SelectedBaseTile7703 = BaseTileChoices8121.SingleOrDefault(b => b.BaseTileId == 7);
         SetBaseTile7860 = true;
 
         OverlayChoices5094 = MinimapRenderer.OverlayTiles;
-        SelectedOverlay3158 = OverlayChoices5094.SingleOrDefault(o => o.OverlayIndex == 3);
+        SelectedOverlay3158 = OverlayChoices5094.SingleOrDefault(o => o.OverlayId == 3);
         SetOverlay3252 = true;
 
         Visibility8138 = new();
@@ -193,11 +193,11 @@ sealed class MapEditorViewmodel : ViewmodelBase
             {
                 var tile = grid.Get(xz);
                 // Show the real tile in the Debug Info...
-                FullHoverInfo1657 = $"Debug Info: {tile.TileValue} / {tile.TileId} / {tile.TileType} / {tile.IsVisible}";
+                FullHoverInfo1657 = $"Debug Info: {tile.TileValue} / {tile.BaseTileId} / {tile.OverlayId} / {tile.IsVisible}";
                 // ... but show the "No Shoreline" everywhere else:
                 tile = tile.FixupShoreline(MinimapShorelineKey.NoShoreline);
-                HoveredBaseTile4659 = BaseTileChoices8121.SingleOrDefault(t => t.TileId == tile.TileId);
-                HoveredOverlay1634 = OverlayChoices5094.SingleOrDefault(o => o.OverlayIndex == tile.TileType);
+                HoveredBaseTile4659 = BaseTileChoices8121.SingleOrDefault(t => t.BaseTileId == tile.BaseTileId);
+                HoveredOverlay1634 = OverlayChoices5094.SingleOrDefault(o => o.OverlayId == tile.OverlayId);
             }
             else
             {
@@ -253,11 +253,11 @@ sealed class MapEditorViewmodel : ViewmodelBase
             var tile = grid.Get(xz);
             if (baseTile != null)
             {
-                tile = tile.ReplaceBaseTile(baseTile.TileId);
+                tile = tile.ReplaceBaseTile(baseTile.BaseTileId);
             }
             if (overlay != null)
             {
-                tile = tile.ReplaceOverlay(overlay.OverlayIndex);
+                tile = tile.ReplaceOverlay(overlay.OverlayId);
             }
             if (visibility.HasValue)
             {

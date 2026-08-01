@@ -262,7 +262,7 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
             val += overlay;
             val |= 0x8000 * 3;
             tile = new MinimapTile { TileValue = val };
-            if (tile.TileId < 0)
+            if (tile.BaseTileId < 0)
             {
                 tile = new MinimapTile { TileValue = 1 };
             }
@@ -285,15 +285,15 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
             if (tile.IsVisible && tile.CanHaveShoreline())
             {
                 var key = MinimapShorelineKey.Compute(xz, grid);
-                if (tile.TileId == key.DeepSeaBaseTileId)
+                if (tile.BaseTileId == key.DeepSeaBaseTileId)
                 {
                     // okay
                 }
-                else if (tile.TileId == key.ShallowSeaBaseTileId)
+                else if (tile.BaseTileId == key.ShallowSeaBaseTileId)
                 {
                     // okay
                 }
-                else if (tile.TileId == key.ClearWaterBaseTileId)
+                else if (tile.BaseTileId == key.ClearWaterBaseTileId)
                 {
                     // okay
                 }

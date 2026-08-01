@@ -40,14 +40,14 @@ static class MinimapRenderer
         BaseTiles = tiles.Index().Take(26).Select(x => new BaseTileModel
         {
             ImageSource = x.Item.Bitmap,
-            TileId = x.Index,
+            BaseTileId = new BaseTileId(x.Index),
             Name = x.Index.ToString(),
         }).ToList();
 
         OverlayTiles = tiles.Index().Where(x => IsValidOverlay(x.Index)).Select(x => new OverlayModel
         {
             ImageSource = x.Item.Bitmap,
-            OverlayIndex = x.Index - 993,
+            OverlayId = new(x.Index - 993),
             Name = (x.Index - 993).ToString(),
         }).ToList();
     }
@@ -154,13 +154,14 @@ static class MinimapRenderer
             return new TileImages { BaseImage = null, OverlayImage = null, ShroudImage = null };
         }
 
-        int baseIndex = tile.IsLegal ? tile.TileId : (MinimapTile.MaxLegalTileId + 1);
+        // Draw base tile
+        var baseId = tile.BaseTileId;
+        int baseIndex = baseId.IsLegal ? baseId.Value : (BaseTileId.MaxLegalValue + 1);
         var baseTile = tiles[baseIndex];
 
-        // --- Draw Overlays ---
-        // Draw TileType overlay (trees, rooms, etc.)
+        // Draw overlay (trees, rooms, etc.)
         TileImage? overlayTile = null;
-        int overlayIndex = OverlayStartIndex + (tile.QuirkyOverlay ?? tile.TileType);
+        int overlayIndex = OverlayStartIndex + (tile.QuirkyOverlay ?? tile.OverlayId);
         if (overlayIndex < tiles.Count)
         {
             overlayTile = tiles[overlayIndex];
