@@ -1,0 +1,47 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace MinimapEditor.Viewmodels;
+
+sealed class ModeModel : ViewmodelBase
+{
+    enum Mode
+    {
+        Pan,
+        Select,
+        Modify
+    };
+
+    private Mode _mode = Mode.Pan;
+
+    private void Set(bool value, Mode mode)
+    {
+        if (value)
+        {
+            ChangeProperty(ref _mode, mode, AllProperties);
+        }
+        else if (mode == _mode)
+        {
+            ChangeProperty(ref _mode, Mode.Pan, AllProperties);
+        }
+    }
+
+    public bool IsPanMode8931
+    {
+        get => _mode == Mode.Pan;
+        set => Set(value, Mode.Pan);
+    }
+
+    public bool IsSelectMode5073
+    {
+        get => _mode == Mode.Select;
+        set => Set(value, Mode.Select);
+    }
+
+    public bool IsModifyMode6812
+    {
+        get => _mode == Mode.Modify;
+        set => Set(value, Mode.Modify);
+    }
+}

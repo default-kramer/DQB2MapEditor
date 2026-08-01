@@ -1,0 +1,191 @@
+﻿<UserControl x:Class="MinimapEditor.MapEditorControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:MinimapEditor"
+             mc:Ignorable="d"
+             PreviewKeyDown="Window_PreviewKeyDown"
+             PreviewKeyUp="Window_PreviewKeyUp"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="180"></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0" Orientation="Vertical">
+            <Border Margin="10" Padding="4,10,4,10" Background="#33F0AA">
+                <Button Click="ResetZoom">Reset Zoom</Button>
+            </Border>
+            <Border Margin="10" Padding="4,10,4,10" Background="Beige">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="HOVERING" HorizontalAlignment="Center"></TextBlock>
+                    <TextBlock Margin="10">
+                        <Run>X: </Run>
+                        <Run Name="xDisplay" Text="{Binding XDisplay2724}"></Run>
+                        <Run>,  Z: </Run>
+                        <Run Name="zDisplay" Text="{Binding ZDisplay6617}"></Run>
+                    </TextBlock>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center">Base Tile:</TextBlock>
+                        <Image Source="{Binding HoveredBaseTile4659.ImageSource}"></Image>
+                        <TextBlock VerticalAlignment="Center" Text="{Binding HoveredBaseTile4659.Name}"></TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center">Overlay:</TextBlock>
+                        <Image Source="{Binding HoveredOverlay1634.ImageSource}"></Image>
+                        <TextBlock VerticalAlignment="Center" Text="{Binding HoveredOverlay1634.Name}"></TextBlock>
+                    </StackPanel>
+                    <TextBlock FontSize="10" TextWrapping="Wrap" Text="{Binding FullHoverInfo1657}"></TextBlock>
+                </StackPanel>
+            </Border>
+            <Border Margin="10" Padding="4,10,4,10" BorderThickness="3">
+                <Border.Style>
+                    <Style TargetType="{x:Type Border}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Mode1336.IsSelectMode5073}" Value="True">
+                                <Setter Property="Background" Value="#9EFBFF"></Setter>
+                                <Setter Property="BorderBrush" Value="#00DDFF"></Setter>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Mode1336.IsSelectMode5073}" Value="False">
+                                <Setter Property="Background" Value="#E8FEFF"></Setter>
+                                <Setter Property="BorderBrush" Value="#E8FEFF"></Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <StackPanel Orientation="Vertical">
+                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsSelectMode5073}">SELECT</CheckBox>
+                    <TextBlock HorizontalAlignment="Center">(or hold key: 1)</TextBlock>
+                    <TextBlock>
+                        <Run Text="{Binding SelectionGrid1346.SelectionCount9593}"></Run>
+                        <Run> tile(s) selected</Run>
+                    </TextBlock>
+                    <Button Margin="0,8,0,8" Command="{Binding CommandClearSelection9567}">Clear Selection</Button>
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel.Style>
+                            <Style TargetType="{x:Type StackPanel}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectionGrid1346.HasSingleSelection5888}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"></Setter>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding SelectionGrid1346.HasSingleSelection5888}" Value="False">
+                                        <Setter Property="Visibility" Value="Hidden"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock>
+                            <Run>X: </Run>
+                            <Run Text="{Binding SelectionGrid1346.SingleSelection9916.X}"></Run>
+                            <Run>Z: </Run>
+                            <Run Text="{Binding SelectionGrid1346.SingleSelection9916.Z}"></Run>
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            <Border Margin="10" Padding="4,10,4,10" BorderThickness="3">
+                <Border.Style>
+                    <Style TargetType="{x:Type Border}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Mode1336.IsModifyMode6812}" Value="True">
+                                <Setter Property="Background" Value="#9EFBFF"></Setter>
+                                <Setter Property="BorderBrush" Value="#00DDFF"></Setter>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Mode1336.IsModifyMode6812}" Value="False">
+                                <Setter Property="Background" Value="#E8FEFF"></Setter>
+                                <Setter Property="BorderBrush" Value="#E8FEFF"></Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <StackPanel Orientation="Vertical">
+                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsModifyMode6812}">MODIFY</CheckBox>
+                    <TextBlock HorizontalAlignment="Center">(or hold key: 2)</TextBlock>
+
+                    <StackPanel Orientation="Vertical" Margin="8" Background="White">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox VerticalAlignment="Center" IsChecked="{Binding SetBaseTile7860}">Set Base Tile</CheckBox>
+                            <Image Margin="4,0,0,0" Source="{Binding SelectedBaseTile7703.ImageSource}"></Image>
+                            <TextBlock VerticalAlignment="Center" Text="{Binding SelectedBaseTile7703.Name}"></TextBlock>
+                        </StackPanel>
+                        <ListView ItemsSource="{Binding BaseTileChoices8121}" SelectedItem="{Binding SelectedBaseTile7703}">
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel MaxWidth="120"></WrapPanel>
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Image MaxWidth="16" Source="{Binding ImageSource}"></Image>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="8" Background="White">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox VerticalAlignment="Center" IsChecked="{Binding SetOverlay3252}">Set Overlay</CheckBox>
+                            <Image Margin="4,0,0,0" Source="{Binding SelectedOverlay3158.ImageSource}"></Image>
+                            <TextBlock VerticalAlignment="Center" Text="{Binding SelectedOverlay3158.Name}"></TextBlock>
+                        </StackPanel>
+                        <ListView ItemsSource="{Binding OverlayChoices5094}" SelectedItem="{Binding SelectedOverlay3158}">
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel MaxWidth="120"></WrapPanel>
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Image MaxWidth="16" Source="{Binding ImageSource}"></Image>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="8" Background="White" DataContext="{Binding Visibility8138}">
+                        <TextBlock>Change Visibility?</TextBlock>
+                        <RadioButton GroupName="SetVisibility" IsChecked="{Binding IsNull3392}">No Change</RadioButton>
+                        <RadioButton GroupName="SetVisibility" IsChecked="{Binding IsTrue9880}">Set Visible</RadioButton>
+                        <RadioButton GroupName="SetVisibility" IsChecked="{Binding IsFalse9122}">Set Hidden</RadioButton>
+                    </StackPanel>
+                    <Button Command="{Binding CommandApplyToSelection4785}" Margin="0,20,0,0">
+                        <TextBlock>
+                            <Run>Apply to </Run>
+                            <Run Text="{Binding SelectionGrid1346.SelectionCount9593}"></Run>
+                            <Run> selected tile(s)</Run>
+                        </TextBlock>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <Button Click="Button_Click_1" Margin="10">Save Changes</Button>
+                <TextBlock VerticalAlignment="Center" Text="{Binding CmndatPath3902}"></TextBlock>
+            </StackPanel>
+            <local:ZoomAndPanControl Grid.Row="1" x:Name="Zoomer" PreviewMouseDown="Zoomer_PreviewMouseDown" PreviewMouseUp="Zoomer_PreviewMouseUp" MouseEnter="Zoomer_MouseEnter">
+                <local:ZoomAndPanControl.Style>
+                    <Style TargetType="{x:Type local:ZoomAndPanControl}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Mode1336.IsPanMode8931}" Value="True">
+                                <Setter Property="Cursor" Value="ScrollAll"></Setter>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Mode1336.IsSelectMode5073}" Value="True">
+                                <Setter Property="Cursor" Value="Arrow"></Setter>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Mode1336.IsModifyMode6812}" Value="True">
+                                <Setter Property="Cursor" Value="Pen"></Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </local:ZoomAndPanControl.Style>
+                <local:ZoomAndPanControl.ZoomableContent>
+                    <Grid Loaded="Grid_Loaded"></Grid>
+                </local:ZoomAndPanControl.ZoomableContent>
+            </local:ZoomAndPanControl>
+        </Grid>
+    </Grid>
+</UserControl>

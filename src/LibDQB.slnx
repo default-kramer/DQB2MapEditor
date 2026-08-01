@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Project Path="../submodules/LibDQB/LibDQB/LibDQB.csproj" />
+  <Project Path="../submodules/LibDQB/LibDQBTests/LibDQBTests.csproj" />
+  <Project Path="MinimapEditor/MinimapEditor.csproj" Id="a160be4c-e51b-4751-92a7-bd1c7314961e" />
+</Solution>
