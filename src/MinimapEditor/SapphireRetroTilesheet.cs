@@ -134,6 +134,10 @@ sealed class SapphireRetroTilesheet : BitmapRepainter<WriteableBitmap>.ITileshee
             bool isSelected = selectionGrid.Get(xz);
             var tileA = isSelected ? selectionTileA : transparentTile;
             var tileB = isSelected ? selectionTileB : transparentTile;
+            if ((xz.X + xz.Z) % 2 == 0)
+            {
+                (tileA, tileB) = (tileB, tileA);
+            }
             writerA.DrawTile(tileA, xz);
             writerB.DrawTile(tileB, xz);
         }
