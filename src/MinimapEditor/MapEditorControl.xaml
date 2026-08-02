@@ -158,7 +158,10 @@
                                 <Setter Property="Cursor" Value="ScrollAll"></Setter>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Mode1336.IsSelectMode5073}" Value="True">
-                                <Setter Property="Cursor" Value="Arrow"></Setter>
+                                <Setter Property="Cursor" Value="IBeam"></Setter>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Mode1336.IsRectSelectMode2843}" Value="True">
+                                <Setter Property="Cursor" Value="SizeNWSE"></Setter>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Mode1336.IsModifyMode6812}" Value="True">
                                 <Setter Property="Cursor" Value="Pen"></Setter>
