@@ -26,6 +26,7 @@ sealed class MapEditorViewmodel : ViewmodelBase
     public MapEditorViewmodel(IGrid<MinimapTile> grid, IGrid<bool> selectionGrid, DataDefinitions definitions)
     {
         this.grid = grid;
+        this.selectionRectOrigState = new Array2D<bool>(selectionGrid.Bounds, false);
 
         SelectionGrid1346 = new SelectionGridModel(selectionGrid);
 
@@ -118,9 +119,9 @@ sealed class MapEditorViewmodel : ViewmodelBase
 
     // Ctrl and Alt keys are poor choices due to special handling.
     // The number keys seem like a good choice...
-    private static bool IsModifyKey(Key key) => key == Key.D2 || key == Key.NumPad2;
-
     public static bool IsSelectKey(Key key) => key == Key.D1 || key == Key.NumPad1;
+    public static bool IsRectSelectKey(Key key) => key == Key.D2 || key == Key.NumPad2;
+    private static bool IsModifyKey(Key key) => key == Key.D3 || key == Key.NumPad3;
 
     public void OnPreviewKeyDown(Key key)
     {
@@ -131,6 +132,10 @@ sealed class MapEditorViewmodel : ViewmodelBase
         else if (IsSelectKey(key))
         {
             this.Mode1336.IsSelectMode5073 = true;
+        }
+        else if (IsRectSelectKey(key))
+        {
+            this.Mode1336.IsRectSelectMode2843 = true;
         }
     }
 
@@ -143,6 +148,10 @@ sealed class MapEditorViewmodel : ViewmodelBase
         else if (IsSelectKey(key))
         {
             this.Mode1336.IsSelectMode5073 = false;
+        }
+        else if (IsRectSelectKey(key))
+        {
+            this.Mode1336.IsRectSelectMode2843 = false;
         }
     }
 
@@ -174,6 +183,23 @@ sealed class MapEditorViewmodel : ViewmodelBase
                 }
             }
         }
+        else if (this.Mode1336.IsRectSelectMode2843)
+        {
+            if (selectionRectDragStart == null)
+            {
+                if (isLeftMouseDown)
+                {
+                    selectionRectOrigState.CopyFrom(SelectionGrid1346);
+                    selectionRectDragStart = (mouseXZ, true);
+                }
+                else if (isRightMouseDown)
+                {
+                    selectionRectOrigState.CopyFrom(SelectionGrid1346);
+                    selectionRectDragStart = (mouseXZ, false);
+                }
+            }
+            UpdateRectSelection(mouseXZ, mouseXZ);
+        }
         else if (this.Mode1336.IsModifyMode6812)
         {
             if (isLeftMouseDown && !oldLeft)
@@ -183,9 +209,55 @@ sealed class MapEditorViewmodel : ViewmodelBase
         }
     }
 
+    private void UpdateRectSelection(XZ newXZ, XZ prevXZ)
+    {
+        if (selectionRectDragStart.HasValue)
+        {
+            if (selectionRectDragStart.Value.isSelecting && !isLeftMouseDown)
+            {
+                selectionRectDragStart = null;
+            }
+            else if (!selectionRectDragStart.Value.isSelecting && !isRightMouseDown)
+            {
+                selectionRectDragStart = null;
+            }
+        }
+
+        if (!selectionRectDragStart.HasValue)
+        {
+            return;
+        }
+
+        var (startXZ, isSelecting) = selectionRectDragStart.Value;
+        var newRect = LibDQB.Rect.GetBounds([startXZ, newXZ]);
+        var fullRect = LibDQB.Rect.GetBounds([startXZ, newXZ, prevXZ]);
+        foreach (var xz in fullRect.Enumerate())
+        {
+            if (newRect.Contains(xz))
+            {
+                SelectionGrid1346.Set(xz, isSelecting);
+            }
+            else
+            {
+                // Selection Rect has shrunk, revert to whatever was there before
+                SelectionGrid1346.Set(xz, selectionRectOrigState.Get(xz));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Clones the selection grid before starting a (de)selection rect so
+    /// that we can revert to previous values if the user shrinks their rect.
+    /// </summary>
+    private readonly Array2D<bool> selectionRectOrigState;
+
+    private (XZ loc, bool isSelecting)? selectionRectDragStart = null;
+
     private XZ mouseXZ = XZ.Zero.Add(-1, -1);
     public void OnMousePositionChanged(XZ xz)
     {
+        var prevMouseXZ = mouseXZ;
+
         if (xz != mouseXZ)
         {
             mouseXZ = xz;
@@ -211,6 +283,11 @@ sealed class MapEditorViewmodel : ViewmodelBase
             }
 
             ApplyModification();
+
+            if (this.Mode1336.IsRectSelectMode2843)
+            {
+                UpdateRectSelection(xz, prevMouseXZ);
+            }
 
             if (this.Mode1336.IsSelectMode5073)
             {

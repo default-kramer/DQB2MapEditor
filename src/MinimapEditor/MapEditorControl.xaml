@@ -43,11 +43,11 @@
                 <Border.Style>
                     <Style TargetType="{x:Type Border}">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding Mode1336.IsSelectMode5073}" Value="True">
+                            <DataTrigger Binding="{Binding Mode1336.IsAnySelectMode4440}" Value="True">
                                 <Setter Property="Background" Value="#9EFBFF"></Setter>
                                 <Setter Property="BorderBrush" Value="#00DDFF"></Setter>
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding Mode1336.IsSelectMode5073}" Value="False">
+                            <DataTrigger Binding="{Binding Mode1336.IsAnySelectMode4440}" Value="False">
                                 <Setter Property="Background" Value="#E8FEFF"></Setter>
                                 <Setter Property="BorderBrush" Value="#E8FEFF"></Setter>
                             </DataTrigger>
@@ -57,8 +57,8 @@
                 <StackPanel Orientation="Vertical">
                     <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsSelectMode5073}">SELECT</CheckBox>
                     <TextBlock HorizontalAlignment="Center">(or hold key: 1)</TextBlock>
-                    <CheckBox HorizontalAlignment="Center" IsChecked="False" IsEnabled="False" Margin="0,7,0,0">RECT SELECT</CheckBox>
-                    <TextBlock HorizontalAlignment="Center">(or hold key: TODO)</TextBlock>
+                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsRectSelectMode2843}" Margin="0,7,0,0">RECT SELECT</CheckBox>
+                    <TextBlock HorizontalAlignment="Center">(or hold key: 2)</TextBlock>
                     <TextBlock Text="Left mouse selects" Margin="0,10,0,0"></TextBlock>
                     <TextBlock Text="Right mouse deselects"></TextBlock>
                     <TextBlock Margin="0,15,0,0">
@@ -85,7 +85,7 @@
                 </Border.Style>
                 <StackPanel Orientation="Vertical">
                     <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsModifyMode6812}">MODIFY</CheckBox>
-                    <TextBlock HorizontalAlignment="Center">(or hold key: 2)</TextBlock>
+                    <TextBlock HorizontalAlignment="Center">(or hold key: 3)</TextBlock>
 
                     <StackPanel Orientation="Vertical" Margin="8" Background="White">
                         <StackPanel Orientation="Horizontal">

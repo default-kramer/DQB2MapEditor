@@ -10,6 +10,7 @@ sealed class ModeModel : ViewmodelBase
     {
         Pan,
         Select,
+        RectSelect,
         Modify
     };
 
@@ -39,9 +40,17 @@ sealed class ModeModel : ViewmodelBase
         set => Set(value, Mode.Select);
     }
 
+    public bool IsRectSelectMode2843
+    {
+        get => _mode == Mode.RectSelect;
+        set => Set(value, Mode.RectSelect);
+    }
+
     public bool IsModifyMode6812
     {
         get => _mode == Mode.Modify;
         set => Set(value, Mode.Modify);
     }
+
+    public bool IsAnySelectMode4440 => IsSelectMode5073 || IsRectSelectMode2843;
 }
