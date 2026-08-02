@@ -52,7 +52,7 @@ internal class StartupViewmodel : ViewmodelBase
     {
         var dialog = new OpenFileDialog();
         dialog.Multiselect = false;
-        dialog.Filter = "DQB2 CMNDAT files|CMNDAT.BIN|All files|*.*";
+        dialog.Filter = "DQB2 CMNDAT files|*CMNDAT.BIN|All files|*.*";
         var sd = TryFindSD();
         if (sd != null)
         {
