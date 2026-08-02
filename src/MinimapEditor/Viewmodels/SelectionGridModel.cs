@@ -41,22 +41,7 @@ sealed class SelectionGridModel : ViewmodelBase, IGrid<bool>
         var smallXZ = xz.Unscale(scale);
         countsPerSector[smallXZ] += delta;
         SelectionCount9593 += delta;
-
-        if (SelectionCount9593 != 1)
-        {
-            SingleSelection9916 = null;
-        }
-        else if (value)
-        {
-            SingleSelection9916 = xz;
-        }
-        else
-        {
-            SingleSelection9916 = FindSingleSelection();
-        }
     }
-
-    private XZ FindSingleSelection() => Selection().First();
 
     public IEnumerable<XZ> Selection()
     {
@@ -87,15 +72,6 @@ sealed class SelectionGridModel : ViewmodelBase, IGrid<bool>
         get => _selectionCount;
         set => ChangeProperty(ref _selectionCount, value);
     }
-
-    private XZ? _singleSelection = null;
-    public XZ? SingleSelection9916
-    {
-        get => _singleSelection;
-        set => ChangeProperty(ref _singleSelection, value, nameof(SingleSelection9916), nameof(HasSingleSelection5888));
-    }
-
-    public bool HasSingleSelection5888 => _singleSelection != null;
 
     public void ClearSelection()
     {
