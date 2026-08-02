@@ -16,7 +16,8 @@ sealed class SapphireRetroTilesheet : BitmapRepainter<WriteableBitmap>.ITileshee
     private readonly IReadOnlyList<TilesheetItem> tiles;
     private readonly TilesheetItem shroudTile;
     private readonly TilesheetItem transparentTile;
-    private readonly TilesheetItem selectionTile;
+    private readonly TilesheetItem selectionTileA;
+    private readonly TilesheetItem selectionTileB;
     private readonly BitmapImage tilesetImage;
     private readonly byte[] sheetPixels;
     private readonly int sheetStride;
@@ -46,7 +47,8 @@ sealed class SapphireRetroTilesheet : BitmapRepainter<WriteableBitmap>.ITileshee
 
         shroudTile = tiles[HiddenTileIndex];
         transparentTile = tiles[OverlayStartIndex]; // Overlay=0 must be transparent
-        selectionTile = tiles[SelectionTileIndex];
+        selectionTileA = tiles[SelectionTileIndex];
+        selectionTileB = tiles[SelectionTileIndex - 1];
     }
 
     /// <summary>
@@ -122,13 +124,18 @@ sealed class SapphireRetroTilesheet : BitmapRepainter<WriteableBitmap>.ITileshee
         }
     }
 
-    public void UpdateSelectionLayer(WriteableBitmap layer, IReadOnlyGrid<bool> selectionGrid, LibDQB.Rect dirty)
+    public void UpdateSelectionLayer(WriteableBitmap layerA, WriteableBitmap layerB, IReadOnlyGrid<bool> selectionGrid, LibDQB.Rect dirty)
     {
-        using var writer = MakeWriter(layer);
+        using var writerA = MakeWriter(layerA);
+        using var writerB = MakeWriter(layerB);
+
         foreach (var xz in dirty.Enumerate())
         {
-            var item = selectionGrid.Get(xz) ? selectionTile : transparentTile;
-            writer.DrawTile(item, xz);
+            bool isSelected = selectionGrid.Get(xz);
+            var tileA = isSelected ? selectionTileA : transparentTile;
+            var tileB = isSelected ? selectionTileB : transparentTile;
+            writerA.DrawTile(tileA, xz);
+            writerB.DrawTile(tileB, xz);
         }
     }
 

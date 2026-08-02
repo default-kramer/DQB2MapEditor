@@ -12,6 +12,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -109,7 +110,42 @@ public partial class MapEditorControl : UserControl
                 image.Stretch = Stretch.None;
                 grid.Children.Add(image);
             }
+
+            // Assume last layer is selection layer which should blink
+            MakeBlinking(grid.Children.OfType<Image>().Last());
         }
+    }
+
+    private static void MakeBlinking(Image image)
+    {
+        Duration blinkDuration = new Duration(TimeSpan.FromMilliseconds(200));
+
+        var sb = new Storyboard();
+        TimeSpan beginTime = TimeSpan.Zero;
+        void Add(DoubleAnimation da)
+        {
+            da.BeginTime = beginTime;
+            beginTime += da.Duration.TimeSpan;
+            sb.Children.Add(da);
+            Storyboard.SetTargetProperty(da, new PropertyPath(nameof(image.Opacity)));
+            Storyboard.SetTarget(da, image);
+        }
+
+        Add(new DoubleAnimation()
+        {
+            From = 0.0,
+            To = 0.0,
+            Duration = blinkDuration,
+        });
+        Add(new DoubleAnimation()
+        {
+            From = 1.0,
+            To = 1.0,
+            Duration = blinkDuration,
+        });
+
+        sb.RepeatBehavior = RepeatBehavior.Forever;
+        sb.Begin();
     }
 
     private void Button_Click_1(object sender, RoutedEventArgs e) => viewmodel?.SaveCmndat();

@@ -28,14 +28,17 @@ sealed class BitmapRepainter<TLayer> : MapEditorViewmodel.IRepainter
         void UpdateBaseTileLayer(TLayer layer, IReadOnlyGrid<MinimapTile> map, Rect dirty);
         void UpdateOverlayLayer(TLayer layer, IReadOnlyGrid<MinimapTile> map, Rect dirty);
         void UpdateVisibilityLayer(TLayer layer, IReadOnlyGrid<MinimapTile> map, Rect dirty);
-        void UpdateSelectionLayer(TLayer layer, IReadOnlyGrid<bool> selectionGrid, Rect dirty);
+        void UpdateSelectionLayer(TLayer layerA, TLayer layerB, IReadOnlyGrid<bool> selectionGrid, Rect dirty);
     }
 
     private readonly ITilesheet tilesheet;
     private readonly TLayer layerBase;
     private readonly TLayer layerOverlay;
     private readonly TLayer layerVisibility;
-    private readonly TLayer layerSelection;
+    // Selection will be drawn on 2 layers. The second (layer B) will blink so that it appears
+    // to be toggling between layer A and layer B.
+    private readonly TLayer layerSelectionA;
+    private readonly TLayer layerSelectionB;
 
     public BitmapRepainter(ITilesheet tilesheet)
     {
@@ -44,7 +47,8 @@ sealed class BitmapRepainter<TLayer> : MapEditorViewmodel.IRepainter
         layerBase = tilesheet.CreateLayer(size, size);
         layerOverlay = tilesheet.CreateLayer(size, size);
         layerVisibility = tilesheet.CreateLayer(size, size);
-        layerSelection = tilesheet.CreateLayer(size, size);
+        layerSelectionA = tilesheet.CreateLayer(size, size);
+        layerSelectionB = tilesheet.CreateLayer(size, size);
     }
 
     IEnumerable<ImageSource> MapEditorViewmodel.IRepainter.AllLayers()
@@ -52,7 +56,8 @@ sealed class BitmapRepainter<TLayer> : MapEditorViewmodel.IRepainter
         yield return layerBase;
         yield return layerOverlay;
         yield return layerVisibility;
-        yield return layerSelection;
+        yield return layerSelectionA;
+        yield return layerSelectionB;
     }
 
     void WpfMinimapGrid.IRepainter.Repaint(IReadOnlyGrid<MinimapTile> grid, Rect dirty)
@@ -64,6 +69,6 @@ sealed class BitmapRepainter<TLayer> : MapEditorViewmodel.IRepainter
 
     void SelectionGridDecorator.IRepainter.Repaint(IReadOnlyGrid<bool> selectionGrid, Rect dirty)
     {
-        tilesheet.UpdateSelectionLayer(layerSelection, selectionGrid, dirty);
+        tilesheet.UpdateSelectionLayer(layerSelectionA, layerSelectionB, selectionGrid, dirty);
     }
 }
