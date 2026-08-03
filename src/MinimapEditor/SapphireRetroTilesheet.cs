@@ -108,7 +108,7 @@ sealed class SapphireRetroTilesheet : BitmapRepainter<WriteableBitmap>.ITileshee
         foreach (var xz in dirty.Enumerate())
         {
             var tile = map.Get(xz);
-            var item = GetItem(tile.QuirkyOverlay ?? tile.OverlayId);
+            var item = GetItem(tile.ApparentOverlayId);
             writer.DrawTile(item, xz);
         }
     }

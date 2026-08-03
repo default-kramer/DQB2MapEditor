@@ -73,6 +73,11 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
             BitmapLayers = repainter,
         };
 
+        if (1.ToString() == "nope")
+        {
+            viewmodel.TEST_FixupShorelines();
+        }
+
         var control = new MapEditorControl();
         control.DataContext = viewmodel;
         SetContent(control);
@@ -105,7 +110,7 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
             {
                 val = 1;
             }
-            minimap.Set(new XZ(2, i + 3), new MinimapTile { TileValue = val });
+            minimap.Set(new XZ(2, i + 3), MinimapTile.FromRawValue(val));
         }
 
         int wantTileId = 0;
@@ -122,7 +127,7 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
             }
             wantTileId++;
 
-            var tile = new MinimapTile { TileValue = val };
+            var tile = MinimapTile.FromRawValue(val);
             int overlay = tile.SeaTypeIndex switch
             {
                 SeaTypeIndex.DeepSea => 7, // mountain
@@ -133,10 +138,10 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
             overlay = 3;
             val += overlay;
             val |= 0x8000 * 3;
-            tile = new MinimapTile { TileValue = val };
+            tile = MinimapTile.FromRawValue(val);
             if (tile.BaseTileId < 0)
             {
-                tile = new MinimapTile { TileValue = 1 };
+                tile = MinimapTile.FromRawValue(1);
             }
             minimap.Set(new XZ(x, z), tile);
         }

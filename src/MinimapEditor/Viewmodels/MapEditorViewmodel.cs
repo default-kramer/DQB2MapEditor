@@ -269,11 +269,11 @@ sealed class MapEditorViewmodel : ViewmodelBase
             {
                 var tile = grid.Get(xz);
                 // Show the real tile in the Debug Info...
-                FullHoverInfo1657 = $"Debug Info: {tile.TileValue} / {tile.BaseTileId} / {tile.OverlayId} / {tile.IsVisible}";
+                FullHoverInfo1657 = $"Debug Info: 0x{tile.TileValue.ToString("x4")} / {tile.BaseTileId} / {tile.ApparentOverlayId}:{tile.FormulaicOverlayId} / {tile.IsVisible}";
                 // ... but show the "No Shoreline" everywhere else:
                 tile = tile.FixupShoreline(MinimapShorelineKey.NoShoreline);
                 HoveredBaseTile4659 = BaseTileChoices8121.SingleOrDefault(t => t.BaseTileId == tile.BaseTileId);
-                HoveredOverlay1634 = OverlayChoices5094.SingleOrDefault(o => o.OverlayId == tile.OverlayId);
+                HoveredOverlay1634 = OverlayChoices5094.SingleOrDefault(o => o.OverlayId == tile.FormulaicOverlayId);
             }
             else
             {
@@ -369,5 +369,29 @@ sealed class MapEditorViewmodel : ViewmodelBase
         Cmndat.LastSaveTime = DateTime.UtcNow.AddYears(1000);
         Cmndat.Save(CmndatPath3902);
         MessageBox.Show("Saved!");
+    }
+
+    public void TEST_FixupShorelines()
+    {
+        foreach (var xz in grid.Bounds.Enumerate())
+        {
+            var tile = grid.Get(xz);
+
+            /*if (tile.IsQuirky)
+            {
+                SelectionGrid1346.Set(xz, true);
+            }*/
+
+            if (tile.BaseTileId.IsLegal && tile.CanHaveShoreline())
+            {
+                var key = MinimapShorelineKey.Compute(xz, grid);
+                var otherTile = tile.FixupShoreline(key);
+                if (tile != otherTile)
+                {
+                    grid.Set(xz, otherTile);
+                    SelectionGrid1346.Set(xz, true);
+                }
+            }
+        }
     }
 }
