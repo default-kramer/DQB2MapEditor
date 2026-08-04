@@ -150,29 +150,61 @@
                 <Button Click="Button_Click_1" Margin="10">Save Changes</Button>
                 <TextBlock VerticalAlignment="Center" Text="{Binding CmndatPath3902}"></TextBlock>
             </StackPanel>
-            <local:ZoomAndPanControl Grid.Row="1" x:Name="Zoomer" PreviewMouseDown="Zoomer_PreviewMouseDown" PreviewMouseUp="Zoomer_PreviewMouseUp" MouseEnter="Zoomer_MouseEnter">
-                <local:ZoomAndPanControl.Style>
-                    <Style TargetType="{x:Type local:ZoomAndPanControl}">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Mode1336.IsPanMode8931}" Value="True">
-                                <Setter Property="Cursor" Value="ScrollAll"></Setter>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Mode1336.IsSelectMode5073}" Value="True">
-                                <Setter Property="Cursor" Value="IBeam"></Setter>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Mode1336.IsRectSelectMode2843}" Value="True">
-                                <Setter Property="Cursor" Value="SizeNWSE"></Setter>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Mode1336.IsModifyMode6812}" Value="True">
-                                <Setter Property="Cursor" Value="Pen"></Setter>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </local:ZoomAndPanControl.Style>
-                <local:ZoomAndPanControl.ZoomableContent>
-                    <Grid Loaded="Grid_Loaded"></Grid>
-                </local:ZoomAndPanControl.ZoomableContent>
-            </local:ZoomAndPanControl>
+            <Grid Grid.Row="1" HorizontalAlignment="Center">
+                <Grid.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Selection...">
+                            <MenuItem Header="Clear Selection" Command="{Binding CommandClearSelection9567}"></MenuItem>
+                            <MenuItem Header="Invert Selection" Click="NotYetImplemented"></MenuItem>
+                            <MenuItem Header="Smart Select..." Click="NotYetImplemented"></MenuItem>
+                        </MenuItem>
+                        <MenuItem Header="Add to Selection...">
+                            <MenuItem Header="Elevated Tiles" Command="{Binding CommandSelectElevatedTiles2364}"></MenuItem>
+                            <MenuItem Header="Illegal Tiles" Command="{Binding CommandSelectIllegalTiles8864}"></MenuItem>
+                            <MenuItem Header="Incorrect Shorelines" Command="{Binding CommandSelectIncorrectShorelines7151}"></MenuItem>
+                        </MenuItem>
+                        <MenuItem Header="Reset Zoom" Click="ResetZoom"></MenuItem>
+                        <MenuItem Header="Write Text..." Click="NotYetImplemented"></MenuItem>
+                        <MenuItem Header="Modify...">
+                            <MenuItem Header="Reset Map...">
+                                <MenuItem Header="all tiles" Click="NotYetImplemented"></MenuItem>
+                                <MenuItem Header="selected tiles" Click="NotYetImplemented"></MenuItem>
+                            </MenuItem>
+                            <MenuItem Header="Remove Elevation...">
+                                <MenuItem Header="all tiles" Click="NotYetImplemented"></MenuItem>
+                                <MenuItem Header="selected tiles" Click="NotYetImplemented"></MenuItem>
+                            </MenuItem>
+                            <MenuItem Header="Fix Shorelines...">
+                                <MenuItem Header="all tiles" Click="NotYetImplemented"></MenuItem>
+                                <MenuItem Header="selected tiles" Click="NotYetImplemented"></MenuItem>
+                            </MenuItem>
+                        </MenuItem>
+                    </ContextMenu>
+                </Grid.ContextMenu>
+                <local:ZoomAndPanControl Grid.Row="1" x:Name="Zoomer" PreviewMouseDown="Zoomer_PreviewMouseDown" PreviewMouseUp="Zoomer_PreviewMouseUp" MouseEnter="Zoomer_MouseEnter">
+                    <local:ZoomAndPanControl.Style>
+                        <Style TargetType="{x:Type local:ZoomAndPanControl}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Mode1336.IsPanMode8931}" Value="True">
+                                    <Setter Property="Cursor" Value="ScrollAll"></Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Mode1336.IsSelectMode5073}" Value="True">
+                                    <Setter Property="Cursor" Value="IBeam"></Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Mode1336.IsRectSelectMode2843}" Value="True">
+                                    <Setter Property="Cursor" Value="SizeNWSE"></Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Mode1336.IsModifyMode6812}" Value="True">
+                                    <Setter Property="Cursor" Value="Pen"></Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </local:ZoomAndPanControl.Style>
+                    <local:ZoomAndPanControl.ZoomableContent>
+                        <Grid Loaded="Grid_Loaded"></Grid>
+                    </local:ZoomAndPanControl.ZoomableContent>
+                </local:ZoomAndPanControl>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

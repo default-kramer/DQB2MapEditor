@@ -43,10 +43,17 @@ sealed class MapEditorViewmodel : ViewmodelBase
 
         CommandApplyToSelection4785 = new RelayCommand(_ => SelectionGrid1346.SelectionCount9593 > 0, _ => ApplyToSelection());
         CommandClearSelection9567 = new RelayCommand(_ => SelectionGrid1346.SelectionCount9593 > 0, _ => SelectionGrid1346.ClearSelection());
+        CommandSelectElevatedTiles2364 = new RelayCommand(_ => true, _ => SelectElevatedTiles());
+        CommandSelectIllegalTiles8864 = new RelayCommand(_ => true, _ => SelectIllegalTiles());
+        CommandSelectIncorrectShorelines7151 = new RelayCommand(_ => true, _ => SelectIncorrectShorelines());
     }
 
     public ICommand CommandApplyToSelection4785 { get; }
     public ICommand CommandClearSelection9567 { get; }
+    public ICommand CommandSelectElevatedTiles2364 { get; }
+    public ICommand CommandSelectIllegalTiles8864 { get; }
+    public ICommand CommandSelectIncorrectShorelines7151 { get; }
+
     public SelectionGridModel SelectionGrid1346 { get; }
     public ModeModel Mode1336 { get; } = new();
 
@@ -371,24 +378,39 @@ sealed class MapEditorViewmodel : ViewmodelBase
         MessageBox.Show("Saved!");
     }
 
-    public void TEST_FixupShorelines()
+    private void SelectElevatedTiles()
     {
         foreach (var xz in grid.Bounds.Enumerate())
         {
-            var tile = grid.Get(xz);
-
-            /*if (tile.IsQuirky)
+            if (grid.Get(xz).IsQuirky)
             {
                 SelectionGrid1346.Set(xz, true);
-            }*/
+            }
+        }
+    }
 
-            if (tile.BaseTileId.IsLegal && tile.CanHaveShoreline())
+    private void SelectIllegalTiles()
+    {
+        foreach (var xz in grid.Bounds.Enumerate())
+        {
+            if (!grid.Get(xz).BaseTileId.IsLegal)
+            {
+                SelectionGrid1346.Set(xz, true);
+            }
+        }
+    }
+
+    private void SelectIncorrectShorelines()
+    {
+        foreach (var xz in grid.Bounds.Enumerate())
+        {
+            var tile = grid.Get(xz).RemoveQuirkiness();
+            if (tile.CanHaveShoreline())
             {
                 var key = MinimapShorelineKey.Compute(xz, grid);
                 var otherTile = tile.FixupShoreline(key);
                 if (tile != otherTile)
                 {
-                    grid.Set(xz, otherTile);
                     SelectionGrid1346.Set(xz, true);
                 }
             }

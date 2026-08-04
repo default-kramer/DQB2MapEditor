@@ -188,4 +188,9 @@ public partial class MapEditorControl : UserControl
             }
         }
     }
+
+    private void NotYetImplemented(object sender, EventArgs e)
+    {
+        MessageBox.Show("Not yet implemented");
+    }
 }

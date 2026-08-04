@@ -73,11 +73,6 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
             BitmapLayers = repainter,
         };
 
-        if (1.ToString() == "nope")
-        {
-            viewmodel.TEST_FixupShorelines();
-        }
-
         var control = new MapEditorControl();
         control.DataContext = viewmodel;
         SetContent(control);
@@ -128,11 +123,11 @@ public partial class MainWindow : Window, StartupViewmodel.ICallback
             wantTileId++;
 
             var tile = MinimapTile.FromRawValue(val);
-            int overlay = tile.SeaTypeIndex switch
+            int overlay = tile.SeaType switch
             {
-                SeaTypeIndex.DeepSea => 7, // mountain
-                SeaTypeIndex.ShallowSea => 1, // tree 1
-                SeaTypeIndex.ClearWater => 3, // tree 2
+                SeaType.DeepSea => 7, // mountain
+                SeaType.ShallowSea => 1, // tree 1
+                SeaType.ClearWater => 3, // tree 2
                 _ => 0,
             };
             overlay = 3;
