@@ -175,8 +175,8 @@
                                 <MenuItem Header="selected tiles" Click="NotYetImplemented"></MenuItem>
                             </MenuItem>
                             <MenuItem Header="Fix Shorelines...">
-                                <MenuItem Header="all tiles" Click="NotYetImplemented"></MenuItem>
-                                <MenuItem Header="selected tiles" Click="NotYetImplemented"></MenuItem>
+                                <MenuItem Header="all tiles" Command="{Binding CommandFixShorelinesAllTiles8510}"></MenuItem>
+                                <MenuItem Header="selected tiles" Command="{Binding CommandFixShorelinesSelectedTiles3733}"></MenuItem>
                             </MenuItem>
                         </MenuItem>
                     </ContextMenu>
