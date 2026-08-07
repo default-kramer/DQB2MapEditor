@@ -48,6 +48,8 @@ sealed class MapEditorViewmodel : ViewmodelBase
         CommandSelectIncorrectShorelines7151 = new RelayCommand(_ => true, _ => SelectIncorrectShorelines());
         CommandFixShorelinesAllTiles8510 = new RelayCommand(_ => true, _ => FixShorelines(selectedTilesOnly: false));
         CommandFixShorelinesSelectedTiles3733 = new RelayCommand(_ => true, _ => FixShorelines(selectedTilesOnly: true));
+        CommandRemoveElevationAllTiles2125 = new RelayCommand(_ => true, _ => RemoveElevation(selectedTilesOnly: false));
+        CommandRemoveElevationSelectedTiles6487 = new RelayCommand(_ => true, _ => RemoveElevation(selectedTilesOnly: true));
     }
 
     public ICommand CommandApplyToSelection4785 { get; }
@@ -57,6 +59,8 @@ sealed class MapEditorViewmodel : ViewmodelBase
     public ICommand CommandSelectIncorrectShorelines7151 { get; }
     public ICommand CommandFixShorelinesAllTiles8510 { get; }
     public ICommand CommandFixShorelinesSelectedTiles3733 { get; }
+    public ICommand CommandRemoveElevationAllTiles2125 { get; }
+    public ICommand CommandRemoveElevationSelectedTiles6487 { get; }
 
     public SelectionGridModel SelectionGrid1346 { get; }
     public ModeModel Mode1336 { get; } = new();
@@ -440,6 +444,23 @@ sealed class MapEditorViewmodel : ViewmodelBase
             if (IsShorelineIncorrect(xz, out var correction))
             {
                 grid.Set(xz, correction);
+                changeCount++;
+            }
+        }
+
+        MessageBox.Show($"{changeCount} tiles updated.");
+    }
+
+    private void RemoveElevation(bool selectedTilesOnly)
+    {
+        int changeCount = 0;
+        var xzs = selectedTilesOnly ? SelectionGrid1346.Selection() : grid.Bounds.Enumerate();
+        foreach (var xz in xzs)
+        {
+            var tile = grid.Get(xz);
+            if (tile.IsQuirky)
+            {
+                grid.Set(xz, tile.RemoveQuirkiness());
                 changeCount++;
             }
         }
