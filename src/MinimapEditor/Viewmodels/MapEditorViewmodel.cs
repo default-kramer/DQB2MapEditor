@@ -52,6 +52,7 @@ sealed class MapEditorViewmodel : ViewmodelBase
         CommandRemoveElevationSelectedTiles6487 = new RelayCommand(_ => true, _ => RemoveElevation(selectedTilesOnly: true));
         CommandResetMapAllTiles3843 = new RelayCommand(_ => true, _ => ResetMap(selectedTilesOnly: false));
         CommandResetMapSelectedTiles1852 = new RelayCommand(_ => true, _ => ResetMap(selectedTilesOnly: true));
+        CommandInvertSelection4977 = new RelayCommand(_ => true, _ => InvertSelection());
     }
 
     public ICommand CommandApplyToSelection4785 { get; }
@@ -65,6 +66,7 @@ sealed class MapEditorViewmodel : ViewmodelBase
     public ICommand CommandRemoveElevationSelectedTiles6487 { get; }
     public ICommand CommandResetMapAllTiles3843 { get; }
     public ICommand CommandResetMapSelectedTiles1852 { get; }
+    public ICommand CommandInvertSelection4977 { get; }
 
     public SelectionGridModel SelectionGrid1346 { get; }
     public ModeModel Mode1336 { get; } = new();
@@ -487,5 +489,13 @@ sealed class MapEditorViewmodel : ViewmodelBase
         }
 
         MessageBox.Show("The reset tiles will be updated by DQB2 when the Builder comes near enough. Door overlays may take longer to update.", $"{changeCount} tiles reset.");
+    }
+
+    private void InvertSelection()
+    {
+        foreach (var xz in SelectionGrid1346.Bounds.Enumerate())
+        {
+            SelectionGrid1346.Set(xz, !SelectionGrid1346.Get(xz));
+        }
     }
 }

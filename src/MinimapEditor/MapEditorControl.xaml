@@ -155,7 +155,7 @@
                     <ContextMenu>
                         <MenuItem Header="Selection...">
                             <MenuItem Header="Clear Selection" Command="{Binding CommandClearSelection9567}"></MenuItem>
-                            <MenuItem Header="Invert Selection" Click="NotYetImplemented"></MenuItem>
+                            <MenuItem Header="Invert Selection" Command="{Binding CommandInvertSelection4977}"></MenuItem>
                             <MenuItem Header="Smart Select..." Click="NotYetImplemented"></MenuItem>
                         </MenuItem>
                         <MenuItem Header="Add to Selection...">
