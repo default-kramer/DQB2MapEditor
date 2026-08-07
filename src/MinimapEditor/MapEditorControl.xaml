@@ -167,8 +167,8 @@
                         <MenuItem Header="Write Text..." Click="NotYetImplemented"></MenuItem>
                         <MenuItem Header="Modify...">
                             <MenuItem Header="Reset Map...">
-                                <MenuItem Header="all tiles" Click="NotYetImplemented"></MenuItem>
-                                <MenuItem Header="selected tiles" Click="NotYetImplemented"></MenuItem>
+                                <MenuItem Header="all tiles" Command="{Binding CommandResetMapAllTiles3843}"></MenuItem>
+                                <MenuItem Header="selected tiles" Command="{Binding CommandResetMapSelectedTiles1852}"></MenuItem>
                             </MenuItem>
                             <MenuItem Header="Remove Elevation...">
                                 <MenuItem Header="all tiles" Command="{Binding CommandRemoveElevationAllTiles2125}"></MenuItem>

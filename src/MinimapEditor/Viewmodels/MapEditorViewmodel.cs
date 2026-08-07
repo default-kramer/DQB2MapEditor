@@ -50,6 +50,8 @@ sealed class MapEditorViewmodel : ViewmodelBase
         CommandFixShorelinesSelectedTiles3733 = new RelayCommand(_ => true, _ => FixShorelines(selectedTilesOnly: true));
         CommandRemoveElevationAllTiles2125 = new RelayCommand(_ => true, _ => RemoveElevation(selectedTilesOnly: false));
         CommandRemoveElevationSelectedTiles6487 = new RelayCommand(_ => true, _ => RemoveElevation(selectedTilesOnly: true));
+        CommandResetMapAllTiles3843 = new RelayCommand(_ => true, _ => ResetMap(selectedTilesOnly: false));
+        CommandResetMapSelectedTiles1852 = new RelayCommand(_ => true, _ => ResetMap(selectedTilesOnly: true));
     }
 
     public ICommand CommandApplyToSelection4785 { get; }
@@ -61,6 +63,8 @@ sealed class MapEditorViewmodel : ViewmodelBase
     public ICommand CommandFixShorelinesSelectedTiles3733 { get; }
     public ICommand CommandRemoveElevationAllTiles2125 { get; }
     public ICommand CommandRemoveElevationSelectedTiles6487 { get; }
+    public ICommand CommandResetMapAllTiles3843 { get; }
+    public ICommand CommandResetMapSelectedTiles1852 { get; }
 
     public SelectionGridModel SelectionGrid1346 { get; }
     public ModeModel Mode1336 { get; } = new();
@@ -466,5 +470,22 @@ sealed class MapEditorViewmodel : ViewmodelBase
         }
 
         MessageBox.Show($"{changeCount} tiles updated.");
+    }
+
+    private void ResetMap(bool selectedTilesOnly)
+    {
+        // FUTURE WORK - We should probably only set this zeroTile when a chunk is present.
+        // When a chunk isn't present, we should reset to 1 instead...
+        var zeroTile = MinimapTile.FromRawValue(0);
+
+        int changeCount = 0;
+        var xzs = selectedTilesOnly ? SelectionGrid1346.Selection() : grid.Bounds.Enumerate();
+        foreach (var xz in xzs)
+        {
+            grid.Set(xz, zeroTile);
+            changeCount++;
+        }
+
+        MessageBox.Show("The reset tiles will be updated by DQB2 when the Builder comes near enough. Door overlays may take longer to update.", $"{changeCount} tiles reset.");
     }
 }
