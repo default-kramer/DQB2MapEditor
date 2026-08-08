@@ -10,13 +10,10 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="180"></ColumnDefinition>
+            <ColumnDefinition Width="200"></ColumnDefinition>
             <ColumnDefinition></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Column="0" Orientation="Vertical">
-            <Border Margin="10" Padding="4,10,4,10" Background="Beige">
-                <Button Click="ResetZoom" HorizontalAlignment="Center">Reset Zoom</Button>
-            </Border>
             <Border Margin="10" Padding="4,10,4,10" Background="Beige">
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="HOVERING" HorizontalAlignment="Center"></TextBlock>
