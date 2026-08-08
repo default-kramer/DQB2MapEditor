@@ -294,7 +294,15 @@ sealed class MapEditorViewmodel : ViewmodelBase
                 // ... but show the "No Shoreline" everywhere else:
                 tile = tile.FixupShoreline(MinimapShorelineKey.NoShoreline);
                 HoveredBaseTile4659 = BaseTileChoices8121.SingleOrDefault(t => t.BaseTileId == tile.BaseTileId);
-                HoveredOverlay1634 = OverlayChoices5094.SingleOrDefault(o => o.OverlayId == tile.FormulaicOverlayId);
+                if (HoveredBaseTile4659 == null)
+                {
+                    // Base tile is probably illegal. Don't show overlay info either.
+                    HoveredOverlay1634 = null;
+                }
+                else
+                {
+                    HoveredOverlay1634 = OverlayChoices5094.SingleOrDefault(o => o.OverlayId == tile.ApparentOverlayId);
+                }
             }
             else
             {
