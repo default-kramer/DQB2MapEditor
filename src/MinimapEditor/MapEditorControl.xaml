@@ -144,7 +144,7 @@
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
             <StackPanel Orientation="Horizontal">
-                <Button Click="Button_Click_1" Margin="10">Save Changes</Button>
+                <Button Click="Button_SaveAs_Click" Margin="10">Save As...</Button>
                 <TextBlock VerticalAlignment="Center" Text="{Binding CmndatPath3902}"></TextBlock>
             </StackPanel>
             <Grid Grid.Row="1" HorizontalAlignment="Center">

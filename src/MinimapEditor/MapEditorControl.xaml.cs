@@ -1,6 +1,4 @@
 ﻿using LibDQB;
-using LibDQB.B2;
-using LibDQB.B2.Records;
 using LibDQB.DQB2Minimap;
 using MinimapEditor.Viewmodels;
 using System;
@@ -8,15 +6,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Windows.Threading;
 
 namespace MinimapEditor;
 
@@ -148,7 +140,45 @@ public partial class MapEditorControl : UserControl
         sb.Begin();
     }
 
-    private void Button_Click_1(object sender, RoutedEventArgs e) => viewmodel?.SaveCmndat();
+    private static bool debugResetLatch = false;
+
+    private void Button_SaveAs_Click(object sender, RoutedEventArgs e)
+    {
+        if (viewmodel == null)
+        {
+            return;
+        }
+
+        if (!debugResetLatch && System.Diagnostics.Debugger.IsAttached)
+        {
+            // Because I don't want to forget that this functionality exists,
+            // reset the flag every time I run with the debugger attached.
+            Properties.Settings.Default.DontShowBackupWarningAgain = false;
+            debugResetLatch = true;
+        }
+
+        bool doSaveAs;
+        if (Properties.Settings.Default.DontShowBackupWarningAgain)
+        {
+            doSaveAs = true;
+        }
+        else
+        {
+            var popup = new SaveBackupWarningDialog();
+            popup.Owner = this.VisualAncestors().OfType<Window>().FirstOrDefault();
+            popup.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            doSaveAs = popup.ShowDialog().GetValueOrDefault(false);
+            if (doSaveAs && popup.DontShowWarningAgain)
+            {
+                Properties.Settings.Default.DontShowBackupWarningAgain = true;
+            }
+        }
+
+        if (doSaveAs)
+        {
+            viewmodel.SaveCmndatAs();
+        }
+    }
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {

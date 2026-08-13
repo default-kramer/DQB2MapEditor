@@ -1,6 +1,7 @@
 ﻿using LibDQB;
 using LibDQB.B2;
 using LibDQB.DQB2Minimap;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -19,7 +20,6 @@ sealed class MapEditorViewmodel : ViewmodelBase
 
     private readonly IGrid<MinimapTile> grid;
 
-    public required string CmndatPath3902 { get; init; }
     public required RawCommonData Cmndat { get; init; }
     public required IRepainter BitmapLayers { get; init; }
 
@@ -72,6 +72,13 @@ sealed class MapEditorViewmodel : ViewmodelBase
     public ModeModel Mode1336 { get; } = new();
 
     public IReadOnlyGrid<MinimapTile> Grid() => grid;
+
+    private string _cmndatPath = "";
+    public required string CmndatPath3902
+    {
+        get => _cmndatPath;
+        init => _cmndatPath = value;
+    }
 
     public IReadOnlyList<BaseTileModel> BaseTileChoices8121 { get; }
     private BaseTileModel? _selectedBaseTile;
@@ -378,26 +385,24 @@ sealed class MapEditorViewmodel : ViewmodelBase
         }
     }
 
-    public void SaveCmndat()
+    public void SaveCmndatAs()
     {
-        const string message = "This app does not create backups yet."
-            + " Are you absolutely sure you want to overwrite your CMNDAT?";
+        var saveDialog = new SaveFileDialog();
+        saveDialog.FileName = CmndatPath3902;
+        saveDialog.Filter = "DQB2 CMNDAT files|*CMNDAT.BIN|All files|*.*";
 
-        var result = MessageBox.Show(message, "WARNING!!", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
-        if (result != MessageBoxResult.Yes)
+        bool ok = saveDialog.ShowDialog().GetValueOrDefault(false);
+        if (!ok)
         {
             return;
         }
 
-        result = MessageBox.Show("Really?", "WARNING!!", MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
-        if (result != MessageBoxResult.Yes)
-        {
-            return;
-        }
+        _cmndatPath = saveDialog.FileName;
+        OnPropertyChanged(nameof(CmndatPath3902));
 
         Cmndat.LastSaveTime = DateTime.UtcNow.AddYears(1000);
-        Cmndat.Save(CmndatPath3902);
-        MessageBox.Show("Saved!");
+        Cmndat.Save(saveDialog.FileName);
+        MessageBox.Show("Saved Successfully!", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void SelectElevatedTiles()
