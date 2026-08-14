@@ -19,6 +19,7 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
         {
             Viewmodel2249 = this,
             Header5924 = "Startup",
+            CommandCloseTab2176 = null,
         };
         Tabs4685.Add(startupTab);
         SelectedTab4149 = startupTab;
@@ -173,11 +174,25 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
             {
                 Header5924 = islandVM.IslandName3332,
                 Viewmodel2249 = vm,
+                CommandCloseTab2176 = new RelayCommand(_ => true, _ => CloseTab(vm)),
             };
             Tabs4685.Add(tab);
         }
 
         SelectedTab4149 = tab;
+    }
+
+    private void CloseTab(MapEditorViewmodel vm)
+    {
+        var tab = Tabs4685.SingleOrDefault(t => t.Viewmodel2249 == vm);
+        if (tab != null)
+        {
+            if (SelectedTab4149 == tab)
+            {
+                SelectedTab4149 = startupTab;
+            }
+            Tabs4685.Remove(tab);
+        }
     }
 
     private static DirectoryInfo? TryFindSD()
@@ -232,6 +247,8 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
     public sealed class TabItemViewmodel : ViewmodelBase
     {
         public required object Viewmodel2249 { get; init; }
+        public required ICommand? CommandCloseTab2176 { get; init; }
+        public bool CanCloseTab4739 => CommandCloseTab2176 != null;
 
         private string _header = "";
         public required string Header5924

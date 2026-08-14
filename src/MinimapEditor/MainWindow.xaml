@@ -19,7 +19,24 @@
     <TabControl x:Name="mainTabControl" ItemsSource="{Binding Tabs4685}" SelectedItem="{Binding SelectedTab4149}">
         <TabControl.ItemTemplate>
             <DataTemplate>
-                <TextBlock FontSize="18" FontWeight="Bold" Text="{Binding Header5924}"></TextBlock>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontSize="18" FontWeight="Bold" Text="{Binding Header5924}"></TextBlock>
+                    <Button Command="{Binding CommandCloseTab2176}" Padding="0" Background="Transparent" BorderThickness="0"
+                            Margin="5,0,0,0" Width="16" Height="16" VerticalContentAlignment="Center">
+                        <Button.Style>
+                            <Style TargetType="{x:Type Button}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CanCloseTab4739}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <Path Stroke="#666" StrokeThickness="1.5" Stretch="Uniform"
+                              Width="12" Height="12"
+                              Data="M 2,2 L 10,10 M 10,2 L 2,10"/>
+                    </Button>
+                </StackPanel>
             </DataTemplate>
         </TabControl.ItemTemplate>
         <TabControl.ContentTemplate>
