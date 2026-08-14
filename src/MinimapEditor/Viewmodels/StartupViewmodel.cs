@@ -26,6 +26,8 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
 
         CommandBrowse1907 = new RelayCommand(_ => !ActiveCmndat.HasValue, _ => Browse());
         CommandClose5823 = new RelayCommand(_ => ActiveCmndat.HasValue, _ => Close());
+        CommandRecheckSteam5759 = new RelayCommand(_ => true, _ => RefreshSteamWarning());
+        CommandDismissSteamWarning5909 = new RelayCommand(_ => true, _ => DismissSteamAutocloudWarning());
     }
 
     public ObservableCollection<TabItemViewmodel> Tabs4685 { get; } = new();
@@ -45,6 +47,8 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
 
     public ICommand CommandBrowse1907 { get; }
     public ICommand CommandClose5823 { get; }
+    public ICommand CommandRecheckSteam5759 { get; }
+    public ICommand CommandDismissSteamWarning5909 { get; }
 
     private readonly record struct LoadedCmndat(string FullPath, RawCommonData Cmndat);
     private LoadedCmndat? _activeCmndat = null;
@@ -100,6 +104,9 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
                 Tabs4685.RemoveAt(i);
             }
         }
+
+        hasDismissedSteamAutocloudWarning = false;
+        RefreshSteamWarning();
     }
 
     private void Browse()
@@ -152,6 +159,47 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
         {
             IslandName3332 = item.Item1,
         }).ToList();
+
+        RefreshSteamWarning();
+    }
+
+    private bool hasDismissedSteamAutocloudWarning = false;
+    private void DismissSteamAutocloudWarning()
+    {
+        hasDismissedSteamAutocloudWarning = true;
+        RefreshSteamWarning();
+    }
+
+    private bool _showSteamAutocloudWarning;
+    public bool ShowSteamAutocloudWarning2483
+    {
+        get => _showSteamAutocloudWarning;
+        private set => ChangeProperty(ref _showSteamAutocloudWarning, value);
+    }
+
+    private void RefreshSteamWarning()
+    {
+        ShowSteamAutocloudWarning2483 = !hasDismissedSteamAutocloudWarning
+            && HasSteamAutocloud(ActiveCmndat)
+            && !IsSteamRunning();
+    }
+
+    private static bool HasSteamAutocloud(LoadedCmndat? ActiveCmndat)
+    {
+        if (!ActiveCmndat.HasValue)
+        {
+            return false;
+        }
+
+        var file = new FileInfo(ActiveCmndat.Value.FullPath);
+        var found = file?.Directory?.EnumerateFiles("steam_autocloud.vdf")?.Any();
+        return found.GetValueOrDefault(false);
+    }
+
+    private static bool IsSteamRunning()
+    {
+        return System.Diagnostics.Process.GetProcessesByName("steam").Any()
+            || System.Diagnostics.Process.GetProcessesByName("SteamService").Any();
     }
 
     void IslandViewmodel.ICallback.OpenMinimap(IslandViewmodel islandVM)
@@ -226,6 +274,8 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
             return;
         }
 
+        var prevFullPath = ActiveCmndat.Value.FullPath;
+
         var saveDialog = new SaveFileDialog();
         saveDialog.FileName = ActiveCmndat.Value.FullPath;
         saveDialog.Filter = "DQB2 CMNDAT files|*CMNDAT.BIN|All files|*.*";
@@ -241,6 +291,13 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
         var Cmndat = ActiveCmndat.Value.Cmndat;
         Cmndat.LastSaveTime = DateTime.UtcNow.AddYears(1000);
         Cmndat.Save(saveDialog.FileName);
+
+        if (!string.Equals(ActiveCmndat.Value.FullPath.Trim(), prevFullPath.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            hasDismissedSteamAutocloudWarning = false;
+            RefreshSteamWarning();
+        }
+
         MessageBox.Show("Saved Successfully!", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 

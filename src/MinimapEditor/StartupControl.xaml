@@ -19,6 +19,30 @@
                     <Button Margin="10,0,0,0" IsEnabled="{Binding CanSave8786}" Click="SaveCmndatAs_Click">Save As...</Button>
                     <Button Margin="10,0,0,0" Command="{Binding CommandClose5823}">Close</Button>
                 </StackPanel>
+                <Border Margin="0,15,0,0" Background="#FF5" Padding="8" MaxWidth="760" HorizontalAlignment="Left">
+                    <Border.Style>
+                        <Style TargetType="{x:Type Border}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowSteamAutocloudWarning2483}" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                        <TextBlock TextWrapping="Wrap">
+                            It looks like Steam is not running.
+                            If you save to this location, Steam Autocloud might overwrite your changes the next time you start Steam.
+                            For best results, start DQB2, then exit DQB2 but leave Steam running.
+                            Then use this tool while Steam is still running, and your edits should be accepted into the Autocloud
+                            as if they had come from DQB2.
+                        </TextBlock>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button Command="{Binding CommandRecheckSteam5759}">Check Again</Button>
+                            <Button Command="{Binding CommandDismissSteamWarning5909}" Margin="8,0,0,0">Dismiss Warning</Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
 
             <StackPanel Margin="0,40,0,0">
