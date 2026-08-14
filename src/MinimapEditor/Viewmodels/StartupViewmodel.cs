@@ -1,9 +1,8 @@
 ﻿using LibDQB.B2;
-using LibDQB.B2.Records;
-using LibDQB.DQB2Minimap;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Numerics;
 using System.Text;
@@ -12,34 +11,63 @@ using System.Windows.Input;
 
 namespace MinimapEditor.Viewmodels;
 
-internal class StartupViewmodel : ViewmodelBase
+sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
 {
-    public interface ICallback
+    public StartupViewmodel()
     {
-        void OpenMap(string cmndatPath, RawCommonData cmndat, IMinimap map);
+        startupTab = new TabItemViewmodel()
+        {
+            Viewmodel2249 = this,
+            Header5924 = "Startup",
+        };
+        Tabs4685.Add(startupTab);
+        SelectedTab4149 = startupTab;
+
+        CommandBrowse1907 = new RelayCommand(_ => !ActiveCmndat.HasValue, _ => Browse());
+        CommandClose5823 = new RelayCommand(_ => ActiveCmndat.HasValue, _ => Close());
     }
 
-    private readonly ICallback callback;
+    public ObservableCollection<TabItemViewmodel> Tabs4685 { get; } = new();
 
-    public StartupViewmodel(ICallback callback)
+    private TabItemViewmodel? _selectedTab = null;
+    public TabItemViewmodel? SelectedTab4149
     {
-        this.callback = callback;
-        CommandBrowse1907 = new RelayCommand(_ => true, _ => Browse());
-        CommandOpen9616 = new RelayCommand(_ => CanOpen().HasValue, _ => Open());
-        IslandChoices8930 = IslandViewmodel.Islands().ToList();
+        get => _selectedTab;
+        set => ChangeProperty(ref _selectedTab, value);
     }
+
+    private readonly TabItemViewmodel startupTab;
+    private SapphireRetroTilesheet? _tilesheet = null;
+    private SapphireRetroTilesheet Tilesheet => Util.LoadOnce(ref _tilesheet, () => SapphireRetroTilesheet.Instance);
+    private DataDefinitions? _dataDefinitions = null;
+    private DataDefinitions DataDefinitions => Util.LoadOnce(ref _dataDefinitions, () => new DataDefinitions(Tilesheet));
 
     public ICommand CommandBrowse1907 { get; }
-    public ICommand CommandOpen9616 { get; }
+    public ICommand CommandClose5823 { get; }
 
-    private string _cmndatPath = "";
-    public string CmndatPath2301
+    private readonly record struct LoadedCmndat(string FullPath, RawCommonData Cmndat);
+    private LoadedCmndat? _activeCmndat = null;
+    private LoadedCmndat? ActiveCmndat
     {
-        get => _cmndatPath;
-        private set => ChangeProperty(ref _cmndatPath, value);
+        get => _activeCmndat;
+        set => ChangeProperty(ref _activeCmndat, value,
+            nameof(CmndatPath2301),
+            nameof(CanSave8786),
+            nameof(WindowTitle8643));
     }
 
-    public IReadOnlyList<IslandViewmodel> IslandChoices8930 { get; }
+    public string CmndatPath2301 => ActiveCmndat?.FullPath ?? "";
+    public bool CanSave8786 => ActiveCmndat.HasValue;
+    public string WindowTitle8643 => ActiveCmndat.HasValue
+        ? $"Map Editor for DQB2 - {ActiveCmndat?.FullPath}"
+        : $"Map Editor for DQB2";
+
+    private IReadOnlyList<IslandViewmodel> _islandChoices = [];
+    public IReadOnlyList<IslandViewmodel> IslandChoices8930
+    {
+        get => _islandChoices;
+        private set => ChangeProperty(ref _islandChoices, value);
+    }
 
     private IslandViewmodel? _selectedIsland;
     public IslandViewmodel? SelectedIsland2951
@@ -48,8 +76,39 @@ internal class StartupViewmodel : ViewmodelBase
         set => ChangeProperty(ref _selectedIsland, value);
     }
 
+    private void Close()
+    {
+        bool hasUnsavedChanges = IslandChoices8930.Where(i => i.ChangedTileCount4506 > 0).Any();
+        if (hasUnsavedChanges)
+        {
+            var result = MessageBox.Show($"You have unsaved changes. Close anyway?", "Discard Changes?",
+                MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
+            if (result != MessageBoxResult.Yes)
+            {
+                return;
+            }
+        }
+
+        ActiveCmndat = null;
+        IslandChoices8930 = [];
+        SelectedIsland2951 = null;
+        for (int i = Tabs4685.Count - 1; i >= 0; i--)
+        {
+            if (Tabs4685[i] != startupTab)
+            {
+                Tabs4685.RemoveAt(i);
+            }
+        }
+    }
+
     private void Browse()
     {
+        if (ActiveCmndat.HasValue)
+        {
+            Util.SoftAssertFail();
+            return;
+        }
+
         var dialog = new OpenFileDialog();
         dialog.Multiselect = false;
         dialog.Filter = "DQB2 CMNDAT files|*CMNDAT.BIN|All files|*.*";
@@ -61,43 +120,64 @@ internal class StartupViewmodel : ViewmodelBase
 
         if (dialog.ShowDialog().GetValueOrDefault(false))
         {
-            CmndatPath2301 = dialog.FileName;
+            LoadCmndat(dialog.FileName);
         }
     }
 
-    private (string cmndatPath, IslandId islandId)? CanOpen()
+    private async void LoadCmndat(string fullPath)
     {
-        if (!string.IsNullOrWhiteSpace(CmndatPath2301) && SelectedIsland2951 != null)
-        {
-            return (CmndatPath2301, SelectedIsland2951.IslandId2242);
-        }
-        return null;
-    }
-
-    private void Open() => DoOpenAsync();
-
-    private async void DoOpenAsync()
-    {
-        var args = CanOpen();
-        if (!args.HasValue)
-        {
-            return;
-        }
-        var a = args.Value;
-
         RawCommonData cmndat;
         try
         {
-            cmndat = await FileFactory.LoadCommonDataAsync(new FileInfo(a.cmndatPath));
+            cmndat = await FileFactory.LoadCommonDataAsync(new FileInfo(fullPath));
         }
         catch (Exception ex)
         {
             MessageBox.Show(ex.Message, "Invalid File");
             return;
         }
+        ActiveCmndat = new LoadedCmndat(fullPath, cmndat);
+        startupTab.Header5924 = Path.GetFileName(fullPath);
 
-        var map = cmndat.GetMinimap(a.islandId);
-        callback.OpenMap(a.cmndatPath, cmndat, map);
+        var deps = new IslandViewmodel.Dependencies
+        {
+            Cmndat = cmndat,
+            DataDefinitions = DataDefinitions,
+            Tilesheet = Tilesheet,
+            Callback = this,
+        };
+
+        IslandChoices8930 = IslandViewmodel.Islands().Select(item => new IslandViewmodel(deps, item.Item2)
+        {
+            IslandName3332 = item.Item1,
+        }).ToList();
+    }
+
+    void IslandViewmodel.ICallback.OpenMinimap(IslandViewmodel islandVM)
+    {
+        if (!IslandChoices8930.Contains(islandVM))
+        {
+            return;
+        }
+
+        var islandId = islandVM.IslandId2242;
+
+        var tab = Tabs4685
+            .Where(t => t.Viewmodel2249 is MapEditorViewmodel mev && mev.IslandId == islandId)
+            .SingleOrDefault();
+
+        if (tab == null)
+        {
+            var vm = islandVM.GetMapEditorVM();
+            tab = new TabItemViewmodel
+            {
+                Header5924 = islandVM.IslandName3332,
+                Viewmodel2249 = vm,
+            };
+            Tabs4685.Add(tab);
+        }
+
+        SelectedTab4149 = tab;
     }
 
     private static DirectoryInfo? TryFindSD()
@@ -122,5 +202,42 @@ internal class StartupViewmodel : ViewmodelBase
             .ToList();
 
         return candidates.FirstOrDefault();
+    }
+
+    public void SaveCmndatAs()
+    {
+        if (!ActiveCmndat.HasValue)
+        {
+            return;
+        }
+
+        var saveDialog = new SaveFileDialog();
+        saveDialog.FileName = ActiveCmndat.Value.FullPath;
+        saveDialog.Filter = "DQB2 CMNDAT files|*CMNDAT.BIN|All files|*.*";
+
+        bool ok = saveDialog.ShowDialog().GetValueOrDefault(false);
+        if (!ok)
+        {
+            return;
+        }
+
+        ActiveCmndat = ActiveCmndat.Value with { FullPath = saveDialog.FileName };
+
+        var Cmndat = ActiveCmndat.Value.Cmndat;
+        Cmndat.LastSaveTime = DateTime.UtcNow.AddYears(1000);
+        Cmndat.Save(saveDialog.FileName);
+        MessageBox.Show("Saved Successfully!", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    public sealed class TabItemViewmodel : ViewmodelBase
+    {
+        public required object Viewmodel2249 { get; init; }
+
+        private string _header = "";
+        public required string Header5924
+        {
+            get => _header;
+            set => ChangeProperty(ref _header, value);
+        }
     }
 }

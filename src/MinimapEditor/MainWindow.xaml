@@ -4,8 +4,28 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MinimapEditor"
+        xmlns:vm="clr-namespace:MinimapEditor.Viewmodels"
         mc:Ignorable="d"
         MinHeight="900" MinWidth="1050"
-        Title="MainWindow">
-    <Grid x:Name="mainGrid"></Grid>
+        Title="{Binding WindowTitle8643}">
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:StartupViewmodel}">
+            <local:StartupControl></local:StartupControl>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MapEditorViewmodel}">
+            <local:MapEditorControl></local:MapEditorControl>
+        </DataTemplate>
+    </Window.Resources>
+    <TabControl x:Name="mainTabControl" ItemsSource="{Binding Tabs4685}" SelectedItem="{Binding SelectedTab4149}">
+        <TabControl.ItemTemplate>
+            <DataTemplate>
+                <TextBlock FontSize="18" FontWeight="Bold" Text="{Binding Header5924}"></TextBlock>
+            </DataTemplate>
+        </TabControl.ItemTemplate>
+        <TabControl.ContentTemplate>
+            <DataTemplate>
+                <ContentControl Content="{Binding Viewmodel2249}" DataContextChanged="ContentControl_DataContextChanged"></ContentControl>
+            </DataTemplate>
+        </TabControl.ContentTemplate>
+    </TabControl>
 </Window>

@@ -1,5 +1,6 @@
 ﻿using LibDQB;
 using LibDQB.B2;
+using LibDQB.B2.Records;
 using LibDQB.DQB2Minimap;
 using Microsoft.Win32;
 using System;
@@ -20,7 +21,7 @@ sealed class MapEditorViewmodel : ViewmodelBase
 
     private readonly IGrid<MinimapTile> grid;
 
-    public required RawCommonData Cmndat { get; init; }
+    public required IslandId IslandId { get; init; }
     public required IRepainter BitmapLayers { get; init; }
 
     public MapEditorViewmodel(IGrid<MinimapTile> grid, IGrid<bool> selectionGrid, DataDefinitions definitions)
@@ -72,13 +73,6 @@ sealed class MapEditorViewmodel : ViewmodelBase
     public ModeModel Mode1336 { get; } = new();
 
     public IReadOnlyGrid<MinimapTile> Grid() => grid;
-
-    private string _cmndatPath = "";
-    public required string CmndatPath3902
-    {
-        get => _cmndatPath;
-        init => _cmndatPath = value;
-    }
 
     public IReadOnlyList<BaseTileModel> BaseTileChoices8121 { get; }
     private BaseTileModel? _selectedBaseTile;
@@ -385,26 +379,6 @@ sealed class MapEditorViewmodel : ViewmodelBase
         }
     }
 
-    public void SaveCmndatAs()
-    {
-        var saveDialog = new SaveFileDialog();
-        saveDialog.FileName = CmndatPath3902;
-        saveDialog.Filter = "DQB2 CMNDAT files|*CMNDAT.BIN|All files|*.*";
-
-        bool ok = saveDialog.ShowDialog().GetValueOrDefault(false);
-        if (!ok)
-        {
-            return;
-        }
-
-        _cmndatPath = saveDialog.FileName;
-        OnPropertyChanged(nameof(CmndatPath3902));
-
-        Cmndat.LastSaveTime = DateTime.UtcNow.AddYears(1000);
-        Cmndat.Save(saveDialog.FileName);
-        MessageBox.Show("Saved Successfully!", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
-    }
-
     private void SelectElevatedTiles()
     {
         foreach (var xz in grid.Bounds.Enumerate())
@@ -501,7 +475,7 @@ sealed class MapEditorViewmodel : ViewmodelBase
             changeCount++;
         }
 
-        MessageBox.Show("The reset tiles will be updated by DQB2 when the Builder comes near enough. Door overlays may take longer to update.", $"{changeCount} tiles reset.");
+        MessageBox.Show("Play DQB2 normally and the tiles will refresh when the Builder gets near enough. Door overlays may take longer to update.", $"{changeCount} tiles reset.");
     }
 
     private void InvertSelection()

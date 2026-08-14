@@ -6,23 +6,93 @@
              xmlns:local="clr-namespace:MinimapEditor"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
+    <Grid Margin="20" VerticalAlignment="Top">
         <Grid.RowDefinitions>
             <RowDefinition></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center">
-            <TextBlock HorizontalAlignment="Center">Choose a CMNDAT file:</TextBlock>
-            <TextBox Width="400" IsReadOnly="True" Text="{Binding CmndatPath2301, Mode=OneWay}"></TextBox>
-            <Button HorizontalAlignment="Center" Command="{Binding CommandBrowse1907}">Browse</Button>
+        <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Vertical">
+                <TextBlock FontWeight="Bold" FontSize="16">CMNDAT File:</TextBlock>
+                <TextBox IsReadOnly="True" Text="{Binding CmndatPath2301, Mode=OneWay}"></TextBox>
+                <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                    <Button Command="{Binding CommandBrowse1907}">Open CMNDAT</Button>
+                    <Button Margin="10,0,0,0" IsEnabled="{Binding CanSave8786}" Click="SaveCmndatAs_Click">Save As...</Button>
+                    <Button Margin="10,0,0,0" Command="{Binding CommandClose5823}">Close</Button>
+                </StackPanel>
+            </StackPanel>
 
-            <TextBlock HorizontalAlignment="Center" Margin="0,20,0,0">Choose an Island:</TextBlock>
-            <ListView ItemsSource="{Binding IslandChoices8930}" SelectedItem="{Binding SelectedIsland2951}" DisplayMemberPath="IslandName3332">
-            </ListView>
-
-            <Button HorizontalAlignment="Center" Margin="0,20,0,0" Command="{Binding CommandOpen9616}">Open</Button>
+            <StackPanel Margin="0,40,0,0">
+                <StackPanel.Style>
+                    <Style TargetType="{x:Type StackPanel}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IslandChoices8930.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Hidden"></Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <TextBlock FontWeight="Bold" FontSize="16">Islands:</TextBlock>
+                <ListView HorizontalAlignment="Left" ItemsSource="{Binding IslandChoices8930}" SelectedItem="{Binding SelectedIsland2951}">
+                    <ListView.View>
+                        <GridView AllowsColumnReorder="False">
+                            <GridView.ColumnHeaderContainerStyle>
+                                <Style BasedOn="{StaticResource {x:Type GridViewColumnHeader}}" TargetType="{x:Type GridViewColumnHeader}">
+                                    <!-- disallow resize -->
+                                    <Setter Property="IsHitTestVisible" Value="False"></Setter>
+                                </Style>
+                            </GridView.ColumnHeaderContainerStyle>
+                            <GridViewColumn Header="Island Name" Width="Auto">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding IslandName3332}"></TextBlock>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding CommandOpenMinimap5775}">Edit Minimap</Button>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Unsaved Changes?">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="No Changes">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="{x:Type TextBlock}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ChangedTileCount4506}" Value="0">
+                                                                <Setter Property="Visibility" Value="Visible"></Setter>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                        <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <TextBlock>
+                                                <TextBlock.Style>
+                                                    <Style TargetType="{x:Type TextBlock}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ChangedTileCount4506}" Value="0">
+                                                                <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                        <Setter Property="Visibility" Value="Visible"></Setter>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                                <Run Text="{Binding ChangedTileCount4506, Mode=OneWay}"></Run>
+                                                <Run Text="tile(s)"></Run>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </StackPanel>
         </StackPanel>
     </Grid>
 </UserControl>
