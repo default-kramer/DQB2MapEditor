@@ -1,13 +1,6 @@
-﻿using LibDQB;
-using LibDQB.B2;
-using LibDQB.B2.Records;
-using LibDQB.DQB2Minimap;
-using MinimapEditor.Viewmodels;
+﻿using MinimapEditor.Viewmodels;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
 namespace MinimapEditor;
@@ -15,169 +8,34 @@ namespace MinimapEditor;
 /// <summary>
 /// Interaction logic for MainWindow.xaml
 /// </summary>
-public partial class MainWindow : Window, StartupViewmodel.ICallback
+public partial class MainWindow : Window
 {
     public MainWindow()
     {
         InitializeComponent();
-
-        var control = new StartupControl();
-        var vm = new StartupViewmodel(this);
-        control.DataContext = vm;
-        SetContent(control);
+        DataContext = new StartupViewmodel();
     }
 
-    private void SetContent(UIElement element)
+    private void ContentControl_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        mainGrid.Children.Clear();
-        mainGrid.Children.Add(element);
-        element.Focusable = true;
-        element.Focus();
-    }
-
-    public void OpenMap(string cmndatPath, RawCommonData cmndat, IMinimap minimap)
-    {
-        if (1.ToString() == "nope")
+        if (e.NewValue is StartupViewmodel.TabItemViewmodel tabVM
+            && tabVM.Viewmodel2249 is MapEditorViewmodel
+            && sender is ContentControl cc)
         {
-            PutTestPattern(minimap);
-        }
-
-        var tilesheet = SapphireRetroTilesheet.Instance;
-
-        var definitions = new DataDefinitions(tilesheet);
-
-        var repainter = new BitmapRepainter<WriteableBitmap>(tilesheet);
-
-        var tileDecorator = new WpfMinimapGrid
-        {
-            Grid = minimap,
-            Repainter = repainter,
-            Dispatcher = this.Dispatcher,
-        };
-
-        tileDecorator.RefreshAll();
-
-        var selectionGrid = new Array2D<bool>(minimap.Bounds, false);
-
-        var selectionDecorator = new SelectionGridDecorator
-        {
-            SelectionGrid = selectionGrid,
-            Repainter = repainter,
-        };
-        selectionDecorator.Refresh(selectionGrid.Bounds);
-
-        var viewmodel = new MapEditorViewmodel(tileDecorator, selectionDecorator, definitions)
-        {
-            Cmndat = cmndat,
-            CmndatPath3902 = cmndatPath,
-            BitmapLayers = repainter,
-        };
-
-        var control = new MapEditorControl();
-        control.DataContext = viewmodel;
-        SetContent(control);
-
-        if (1.ToString() == "nope")
-        {
-            for (byte i = IslandId.IoA.Value; i <= IslandId.Buildertopia3.Value; i++)
+            // This is needed so that the keyboard shortcuts on the map editor control work immediately
+            Dispatcher.BeginInvoke(() =>
             {
-                ValidateShores(cmndat.GetMinimap(new IslandId(i)));
-            }
-        }
-    }
-
-    private static void PutTestPattern(IGrid<MinimapTile> minimap)
-    {
-        for (int i = 0; i < 2048 * 2 / 32; i++)
-        {
-            int val;
-            if (i % 16 == 0)
-            {
-                val = 1 + 3 * 11;
-                val |= 0x8000;
-            }
-            else if (i % 4 == 0)
-            {
-                val = 1 + 5 * 11;
-                val |= 0x8000;
-            }
-            else
-            {
-                val = 1;
-            }
-            minimap.Set(new XZ(2, i + 3), MinimapTile.FromRawValue(val));
-        }
-
-        int wantTileId = 0;
-        for (int i = 0; i < 2048 * 2; i++)
-        {
-            int x = i % 32 + 3;
-            int z = i / 32 + 3;
-            int val = wantTileId * 11 + 1;
-            if (val >= 0x4000)
-            {
-                int baseVal = val / 0x4000 * 0x4000;
-                int blah = 1 + baseVal / 11;
-                val = baseVal + (wantTileId - blah) * 11 + 1;
-            }
-            wantTileId++;
-
-            var tile = MinimapTile.FromRawValue(val);
-            int overlay = tile.SeaType switch
-            {
-                SeaType.DeepSea => 7, // mountain
-                SeaType.ShallowSea => 1, // tree 1
-                SeaType.ClearWater => 3, // tree 2
-                _ => 0,
-            };
-            overlay = 3;
-            val += overlay;
-            val |= 0x8000 * 3;
-            tile = MinimapTile.FromRawValue(val);
-            if (tile.BaseTileId < 0)
-            {
-                tile = MinimapTile.FromRawValue(1);
-            }
-            minimap.Set(new XZ(x, z), tile);
-        }
-    }
-
-    private static void ValidateShores(IReadOnlyGrid<MinimapTile> grid)
-    {
-        if (grid.Get(new XZ(0, 0)).TileValue == -1)
-        {
-            return;
-        }
-
-        bool hasAlerted = false;
-
-        foreach (var xz in grid.Bounds.Enumerate())
-        {
-            var tile = grid.Get(xz);
-            if (tile.IsVisible && tile.CanHaveShoreline())
-            {
-                var key = MinimapShorelineKey.Compute(xz, grid);
-                if (tile.BaseTileId == key.DeepSeaBaseTileId)
+                var mapEditors = VisualTreeBFS.MakeSimpleFilter<MapEditorControl>().DoBFS(cc).ToList();
+                if (mapEditors.Count == 1)
                 {
-                    // okay
+                    mapEditors[0].Focusable = true;
+                    mapEditors[0].Focus();
                 }
-                else if (tile.BaseTileId == key.ShallowSeaBaseTileId)
+                else
                 {
-                    // okay
+                    Util.SoftAssertFail();
                 }
-                else if (tile.BaseTileId == key.ClearWaterBaseTileId)
-                {
-                    // okay
-                }
-                else if (!hasAlerted)
-                {
-                    hasAlerted = true;
-                    // Alert! If this map hasn't been hacked, it means that I haven't learned
-                    // everything about how Shorelines tiles are chosen.
-                    // (But if this is a hacked map, it probably means nothing. Carry on.)
-                    System.Diagnostics.Debugger.Break();
-                }
-            }
+            });
         }
     }
 }

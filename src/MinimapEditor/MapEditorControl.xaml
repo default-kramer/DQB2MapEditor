@@ -140,14 +140,9 @@
         </StackPanel>
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition></RowDefinition>
             </Grid.RowDefinitions>
-            <StackPanel Orientation="Horizontal">
-                <Button Click="Button_SaveAs_Click" Margin="10">Save As...</Button>
-                <TextBlock VerticalAlignment="Center" Text="{Binding CmndatPath3902}"></TextBlock>
-            </StackPanel>
-            <Grid Grid.Row="1" HorizontalAlignment="Center">
+            <Grid HorizontalAlignment="Center">
                 <Grid.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="Selection...">

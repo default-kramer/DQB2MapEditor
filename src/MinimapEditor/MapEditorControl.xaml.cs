@@ -46,29 +46,6 @@ public partial class MapEditorControl : UserControl
         viewmodel?.OnMousePositionChanged(xz);
     }
 
-    private static System.Windows.Rect? GetInitialZoom(IReadOnlyGrid<MinimapTile> grid)
-    {
-        var xzs = grid.Bounds.Enumerate().Where(xz => grid.Get(xz).IsVisible).ToList();
-        if (xzs.Count == 0)
-        {
-            return null;
-        }
-
-        var rect = LibDQB.Rect.GetBounds(xzs);
-        double x0 = (0.0 + rect.Start.X) / grid.Bounds.Size.X;
-        double x1 = (0.0 + rect.End.X) / grid.Bounds.Size.X;
-        double y0 = (0.0 + rect.Start.Z) / grid.Bounds.Size.Z;
-        double y1 = (0.0 + rect.End.Z) / grid.Bounds.Size.Z;
-        double w = x1 - x0;
-        double h = y1 - y0;
-        double size = Math.Max(w, h);
-        double dx = Math.Min(0, w - size) / 2;
-        double dy = Math.Min(0, h - size) / 2;
-        x0 = Math.Clamp(x0 + dx, 0, 1.0 - size);
-        y0 = Math.Clamp(y0 + dy, 0, 1.0 - size);
-        return new System.Windows.Rect(x0, y0, size, size);
-    }
-
     private void MapEditorControl_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (bitmapGrid != null)
@@ -76,7 +53,6 @@ public partial class MapEditorControl : UserControl
             bitmapGrid.Children.Clear();
             ReloadBitmaps();
         }
-        ResetZoom(viewmodel?.Grid());
     }
 
     private void Grid_Loaded(object sender, RoutedEventArgs e)
@@ -140,46 +116,6 @@ public partial class MapEditorControl : UserControl
         sb.Begin();
     }
 
-    private static bool debugResetLatch = false;
-
-    private void Button_SaveAs_Click(object sender, RoutedEventArgs e)
-    {
-        if (viewmodel == null)
-        {
-            return;
-        }
-
-        if (!debugResetLatch && System.Diagnostics.Debugger.IsAttached)
-        {
-            // Because I don't want to forget that this functionality exists,
-            // reset the flag every time I run with the debugger attached.
-            Properties.Settings.Default.DontShowBackupWarningAgain = false;
-            debugResetLatch = true;
-        }
-
-        bool doSaveAs;
-        if (Properties.Settings.Default.DontShowBackupWarningAgain)
-        {
-            doSaveAs = true;
-        }
-        else
-        {
-            var popup = new SaveBackupWarningDialog();
-            popup.Owner = this.VisualAncestors().OfType<Window>().FirstOrDefault();
-            popup.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            doSaveAs = popup.ShowDialog().GetValueOrDefault(false);
-            if (doSaveAs && popup.DontShowWarningAgain)
-            {
-                Properties.Settings.Default.DontShowBackupWarningAgain = true;
-            }
-        }
-
-        if (doSaveAs)
-        {
-            viewmodel.SaveCmndatAs();
-        }
-    }
-
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         viewmodel?.OnPreviewKeyDown(e.Key);
@@ -205,17 +141,12 @@ public partial class MapEditorControl : UserControl
         viewmodel?.OnMouseEvent(e);
     }
 
-    private void ResetZoom(object sender, RoutedEventArgs e) => ResetZoom(viewmodel?.Grid());
-
-    private void ResetZoom(IReadOnlyGrid<MinimapTile>? grid)
+    private void ResetZoom(object sender, RoutedEventArgs e)
     {
-        if (grid != null)
+        if (viewmodel != null)
         {
-            var zoom = GetInitialZoom(grid);
-            if (zoom.HasValue)
-            {
-                Zoomer.SetZoom(zoom.Value);
-            }
+            viewmodel.ResetZoom();
+            Zoomer.SetZoom(viewmodel);
         }
     }
 
