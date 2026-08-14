@@ -1,15 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace MinimapEditor;
 
@@ -18,6 +9,11 @@ namespace MinimapEditor;
 /// </summary>
 public partial class ZoomAndPanControl : UserControl
 {
+    public interface IZoomMemory
+    {
+        Rect? CurrentZoom { get; set; }
+    }
+
     public static readonly DependencyProperty ZoomableContentProperty =
         DependencyProperty.Register("ZoomableContent", typeof(object), typeof(ZoomAndPanControl), new PropertyMetadata(null));
 
@@ -66,25 +62,9 @@ public partial class ZoomAndPanControl : UserControl
         }
     }
 
-    private bool hasLoaded = false;
-    private Rect? requestedInitialZoom;
-
     private void ZoomAndPanControl_Loaded(object sender, RoutedEventArgs e)
     {
         theBrush.Visual = contentHost;
-
-        Dispatcher.BeginInvoke(new Action(() =>
-        {
-            TrySetContentSize();
-
-            // Nasty timing issue, but this works (for now, at least):
-            hasLoaded = true;
-            if (requestedInitialZoom.HasValue)
-            {
-                ZoomTo(requestedInitialZoom.Value);
-                requestedInitialZoom = null;
-            }
-        }), System.Windows.Threading.DispatcherPriority.ContextIdle);
     }
 
     private void TrySetContentSize()
@@ -94,7 +74,8 @@ public partial class ZoomAndPanControl : UserControl
 
         if (contentWidth > 0 && contentHeight > 0)
         {
-            ResetZoom();
+            var zoom = (DataContext as IZoomMemory)?.CurrentZoom ?? NoZoom;
+            ZoomTo(zoom);
         }
     }
 
@@ -102,38 +83,16 @@ public partial class ZoomAndPanControl : UserControl
 
     public bool IsZoomed() => theBrush.Viewbox != NoZoom;
 
-    private void ResetZoom()
-    {
-        if (contentWidth > 0 && contentHeight > 0)
-        {
-            theBrush.Viewbox = NoZoom;
-            viewboxContentGrid.Width = contentWidth;
-            viewboxContentGrid.Height = contentHeight;
-        }
-    }
-
-    private void ResetZoom_Click(object sender, RoutedEventArgs e)
-    {
-        ResetZoom();
-    }
-
-    public void SetZoom(Rect zoom)
-    {
-        if (!hasLoaded)
-        {
-            requestedInitialZoom = zoom;
-        }
-        else
-        {
-            ZoomTo(zoom);
-        }
-    }
-
     private void ZoomTo(Rect zoom)
     {
         theBrush.Viewbox = zoom;
         viewboxContentGrid.Width = contentWidth * zoom.Width;
         viewboxContentGrid.Height = contentHeight * zoom.Height;
+
+        if (DataContext is IZoomMemory zm)
+        {
+            zm.CurrentZoom = zoom;
+        }
     }
 
     private void viewboxContentGrid_MouseMove(object sender, MouseEventArgs e)
@@ -243,5 +202,34 @@ public partial class ZoomAndPanControl : UserControl
     private void StopDragging()
     {
         draggingFrom = null;
+    }
+
+    private void UserControl_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.NewValue is IZoomMemory zm && zm.CurrentZoom.HasValue)
+        {
+            ZoomTo(zm.CurrentZoom.Value);
+        }
+    }
+
+    /// <summary>
+    /// The <see cref="IZoomMemory"/> does not have a notification mechanism;
+    /// instead you have to call this method to tell this control to check the new value.
+    /// </summary>
+    public void SetZoom(IZoomMemory dataContext)
+    {
+        if (this.DataContext != dataContext)
+        {
+            // Probably the caller knows that our DataContext is about to change,
+            // and we will respond when that happens.
+            // Or maybe the caller has a bug.
+            // Either way, we ignore the request.
+            return;
+        }
+
+        if (dataContext.CurrentZoom.HasValue)
+        {
+            ZoomTo(dataContext.CurrentZoom.Value);
+        }
     }
 }

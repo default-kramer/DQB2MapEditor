@@ -12,7 +12,7 @@ using System.Windows.Media;
 
 namespace MinimapEditor.Viewmodels;
 
-sealed class MapEditorViewmodel : ViewmodelBase
+sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
 {
     public interface IRepainter
     {
@@ -54,6 +54,8 @@ sealed class MapEditorViewmodel : ViewmodelBase
         CommandResetMapAllTiles3843 = new RelayCommand(_ => true, _ => ResetMap(selectedTilesOnly: false));
         CommandResetMapSelectedTiles1852 = new RelayCommand(_ => true, _ => ResetMap(selectedTilesOnly: true));
         CommandInvertSelection4977 = new RelayCommand(_ => true, _ => InvertSelection());
+
+        ResetZoom();
     }
 
     public ICommand CommandApplyToSelection4785 { get; }
@@ -138,6 +140,18 @@ sealed class MapEditorViewmodel : ViewmodelBase
     }
 
     public NullableBooleanModel Visibility8138 { get; }
+
+    private System.Windows.Rect? _currentZoom = null;
+    System.Windows.Rect? ZoomAndPanControl.IZoomMemory.CurrentZoom
+    {
+        get => _currentZoom;
+        set => _currentZoom = value;
+    }
+
+    public void ResetZoom()
+    {
+        _currentZoom = GetInitialZoom(grid);
+    }
 
     // Ctrl and Alt keys are poor choices due to special handling.
     // The number keys seem like a good choice...
@@ -484,5 +498,28 @@ sealed class MapEditorViewmodel : ViewmodelBase
         {
             SelectionGrid1346.Set(xz, !SelectionGrid1346.Get(xz));
         }
+    }
+
+    private static System.Windows.Rect? GetInitialZoom(IReadOnlyGrid<MinimapTile> grid)
+    {
+        var xzs = grid.Bounds.Enumerate().Where(xz => grid.Get(xz).IsVisible).ToList();
+        if (xzs.Count == 0)
+        {
+            return null;
+        }
+
+        var rect = LibDQB.Rect.GetBounds(xzs);
+        double x0 = (0.0 + rect.Start.X) / grid.Bounds.Size.X;
+        double x1 = (0.0 + rect.End.X) / grid.Bounds.Size.X;
+        double y0 = (0.0 + rect.Start.Z) / grid.Bounds.Size.Z;
+        double y1 = (0.0 + rect.End.Z) / grid.Bounds.Size.Z;
+        double w = x1 - x0;
+        double h = y1 - y0;
+        double size = Math.Max(w, h);
+        double dx = Math.Min(0, w - size) / 2;
+        double dy = Math.Min(0, h - size) / 2;
+        x0 = Math.Clamp(x0 + dx, 0, 1.0 - size);
+        y0 = Math.Clamp(y0 + dy, 0, 1.0 - size);
+        return new System.Windows.Rect(x0, y0, size, size);
     }
 }
