@@ -51,7 +51,7 @@
                             <GridViewColumn Header="">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Command="{Binding CommandOpenMinimap5775}">Edit Minimap</Button>
+                                        <TextBlock><Hyperlink Command="{Binding CommandOpenMinimap5775}">Edit Minimap</Hyperlink></TextBlock>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
