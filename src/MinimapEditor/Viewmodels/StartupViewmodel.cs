@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Numerics;
 using System.Text;
@@ -81,16 +82,28 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
         set => ChangeProperty(ref _selectedIsland, value);
     }
 
-    private void Close()
+    public void OnAppExiting(CancelEventArgs args)
     {
-        bool hasUnsavedChanges = IslandChoices8930.Where(i => i.ChangedTileCount4506 > 0).Any();
-        if (hasUnsavedChanges)
+        if (HasUnsavedChanges())
+        {
+            // Switch to Startup Tab before popping the question
+            // so the user can see which maps have unsaved changes.
+            SelectedTab4149 = startupTab;
+            args.Cancel = !Close();
+        }
+    }
+
+    private bool HasUnsavedChanges() => IslandChoices8930.Where(i => i.ChangedTileCount4506 > 0).Any();
+
+    private bool Close()
+    {
+        if (HasUnsavedChanges())
         {
             var result = MessageBox.Show($"You have unsaved changes. Close anyway?", "Discard Changes?",
                 MessageBoxButton.YesNo, MessageBoxImage.Exclamation, MessageBoxResult.No);
             if (result != MessageBoxResult.Yes)
             {
-                return;
+                return false;
             }
         }
 
@@ -107,6 +120,7 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
 
         hasDismissedSteamAutocloudWarning = false;
         RefreshSteamWarning();
+        return true;
     }
 
     private void Browse()
