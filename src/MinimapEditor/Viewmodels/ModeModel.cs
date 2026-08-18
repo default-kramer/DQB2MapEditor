@@ -11,7 +11,8 @@ sealed class ModeModel : ViewmodelBase
         Pan,
         Select,
         RectSelect,
-        Modify
+        Modify,
+        Paste,
     };
 
     private Mode _mode = Mode.Pan;
@@ -50,6 +51,12 @@ sealed class ModeModel : ViewmodelBase
     {
         get => _mode == Mode.Modify;
         set => Set(value, Mode.Modify);
+    }
+
+    public bool IsPasteMode4735
+    {
+        get => _mode == Mode.Paste;
+        set => Set(value, Mode.Paste);
     }
 
     public bool IsAnySelectMode4440 => IsSelectMode5073 || IsRectSelectMode2843;

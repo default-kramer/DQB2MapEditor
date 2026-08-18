@@ -1,9 +1,5 @@
 ﻿using LibDQB;
-using LibDQB.DQB2Minimap;
 using MinimapEditor.Viewmodels;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -153,5 +149,10 @@ public partial class MapEditorControl : UserControl
     private void NotYetImplemented(object sender, EventArgs e)
     {
         MessageBox.Show("Not yet implemented");
+    }
+
+    private void Copy_Click(object sender, RoutedEventArgs e)
+    {
+        viewmodel?.CopySelectionToClipboard();
     }
 }

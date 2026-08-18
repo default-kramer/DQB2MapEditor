@@ -1,11 +1,6 @@
 ﻿using LibDQB;
-using LibDQB.B2;
 using LibDQB.B2.Records;
 using LibDQB.DQB2Minimap;
-using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -20,6 +15,7 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
     }
 
     private readonly IGrid<MinimapTile> grid;
+    private readonly PasteManager pasteManager;
 
     public required IslandId IslandId { get; init; }
     public required IRepainter BitmapLayers { get; init; }
@@ -56,6 +52,31 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
         CommandInvertSelection4977 = new RelayCommand(_ => true, _ => InvertSelection());
 
         ResetZoom();
+
+        pasteManager = new(grid, Mode1336);
+
+        Mode1336.PropertyChanged += Mode1336_PropertyChanged;
+    }
+
+    private void Mode1336_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        var pasteStatus = pasteManager.GetStatus();
+        PasteMessageGood7320 = pasteStatus.message;
+        ShowPasteError6146 = pasteStatus.hasError;
+    }
+
+    private string _pasteMessageGood = "";
+    public string PasteMessageGood7320
+    {
+        get => _pasteMessageGood;
+        private set => ChangeProperty(ref _pasteMessageGood, value);
+    }
+
+    private bool _showPasteError = false;
+    public bool ShowPasteError6146
+    {
+        get => _showPasteError;
+        private set => ChangeProperty(ref _showPasteError, value);
     }
 
     public ICommand CommandApplyToSelection4785 { get; }
@@ -72,7 +93,8 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
     public ICommand CommandInvertSelection4977 { get; }
 
     public SelectionGridModel SelectionGrid1346 { get; }
-    public ModeModel Mode1336 { get; } = new();
+    private readonly ModeModel _mode = new();
+    public ModeModel Mode1336 => _mode;
 
     public IReadOnlyGrid<MinimapTile> Grid() => grid;
 
@@ -155,9 +177,10 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
 
     // Ctrl and Alt keys are poor choices due to special handling.
     // The number keys seem like a good choice...
-    public static bool IsSelectKey(Key key) => key == Key.D1 || key == Key.NumPad1;
-    public static bool IsRectSelectKey(Key key) => key == Key.D2 || key == Key.NumPad2;
+    private static bool IsSelectKey(Key key) => key == Key.D1 || key == Key.NumPad1;
+    private static bool IsRectSelectKey(Key key) => key == Key.D2 || key == Key.NumPad2;
     private static bool IsModifyKey(Key key) => key == Key.D3 || key == Key.NumPad3;
+    private static bool IsPasteKey(Key key) => key == Key.D4 || key == Key.NumPad4;
 
     public void OnPreviewKeyDown(Key key)
     {
@@ -172,6 +195,10 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
         else if (IsRectSelectKey(key))
         {
             this.Mode1336.IsRectSelectMode2843 = true;
+        }
+        else if (IsPasteKey(key))
+        {
+            pasteManager.OnPasteKeyDown();
         }
     }
 
@@ -189,6 +216,10 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
         {
             this.Mode1336.IsRectSelectMode2843 = false;
         }
+        else if (IsPasteKey(key))
+        {
+            pasteManager.OnPasteKeyUp();
+        }
     }
 
     private bool isLeftMouseDown = false;
@@ -204,6 +235,8 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
         {
             e.Handled = true; // disable panning
         }
+
+        pasteManager.Refresh(mouseXZ);
 
         if (this.Mode1336.IsSelectMode5073)
         {
@@ -241,6 +274,13 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
             if (isLeftMouseDown && !oldLeft)
             {
                 ApplyModification();
+            }
+        }
+        else if (this.Mode1336.IsPasteMode4735)
+        {
+            if (isLeftMouseDown && !oldLeft)
+            {
+                pasteManager.DoPaste();
             }
         }
     }
@@ -327,6 +367,7 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
             }
 
             ApplyModification();
+            pasteManager.Refresh(mouseXZ);
 
             if (this.Mode1336.IsRectSelectMode2843)
             {
@@ -521,5 +562,169 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
         x0 = Math.Clamp(x0 + dx, 0, 1.0 - size);
         y0 = Math.Clamp(y0 + dy, 0, 1.0 - size);
         return new System.Windows.Rect(x0, y0, size, size);
+    }
+
+    public void CopySelectionToClipboard()
+    {
+        var selection = SelectionGrid1346.Selection().ToList();
+        var bounds = LibDQB.Rect.GetBounds(selection);
+        var array = new Array2D<MinimapTile?>(bounds, null);
+        foreach (var xz in selection)
+        {
+            array.Set(xz, grid.Get(xz));
+        }
+
+        var clipboardData = MinimapClipboardData.Create(array);
+        Clipboard.SetData(MinimapClipboardData.Format, clipboardData.ToClipboardObject());
+    }
+
+    sealed class PasteManager
+    {
+        /// <summary>
+        /// When entering paste mode, we will back up the entire grid.
+        /// This allows us to revert the preview as the user moves their mouse,
+        /// or when they exit paste mode.
+        /// </summary>
+        private readonly Array2D<MinimapTile> backup;
+
+        private readonly IGrid<MinimapTile> grid;
+        private readonly ModeModel mode;
+        private (LibDQB.Rect previewRect, MinimapClipboardData pasteData, int pasteCount)? state;
+        private XZ mouseXZ;
+
+        /// <summary>
+        /// We want to exit paste mode when the user completes the paste.
+        /// But if they are holding down the paste key, we will see repeated key down events
+        /// which would cause us to immediately re-enter paste mode if we're not careful.
+        /// This latch is used to ignore those repeated events.
+        /// </summary>
+        private bool isPasteKeyRepeating = false;
+
+        public PasteManager(IGrid<MinimapTile> grid, ModeModel mode)
+        {
+            this.grid = grid;
+            this.mode = mode;
+            this.backup = new Array2D<MinimapTile>(grid.Bounds, MinimapTile.FromRawValue(0));
+
+            mode.PropertyChanged += Mode_PropertyChanged;
+        }
+
+        private void Mode_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            Refresh(mouseXZ);
+        }
+
+        public void Refresh(XZ mouseXZ)
+        {
+            this.mouseXZ = mouseXZ;
+
+            if (!mode.IsPasteMode4735)
+            {
+                RevertPastePreviewTiles(state);
+                state = null;
+                return;
+            }
+
+            MinimapClipboardData? pasteData;
+            int pasteCount;
+            if (state.HasValue)
+            {
+                if (state.Value.previewRect.Start == mouseXZ)
+                {
+                    return; // preview is already up to date
+                }
+                pasteData = state.Value.pasteData;
+                pasteCount = state.Value.pasteCount;
+            }
+            else if (MinimapClipboardData.FromClipboardObject(Clipboard.GetData(MinimapClipboardData.Format), out pasteData))
+            {
+                pasteCount = pasteData.Bounds.Enumerate().Where(xz => pasteData.Get(xz).HasValue).Count();
+                backup.CopyFrom(grid); // entering paste mode, capture the backup
+            }
+            else
+            {
+                return;
+            }
+
+            RevertPastePreviewTiles(state);
+            var previewRect = ApplyPaste(pasteData);
+            state = (previewRect, pasteData, pasteCount);
+        }
+
+        private void RevertPastePreviewTiles((LibDQB.Rect previewRect, MinimapClipboardData _1, int _2)? state)
+        {
+            if (state.HasValue)
+            {
+                foreach (var xz in state.Value.previewRect.Enumerate())
+                {
+                    grid.Set(xz, backup.Get(xz));
+                }
+            }
+        }
+
+        private LibDQB.Rect ApplyPaste(MinimapClipboardData data)
+        {
+            var src = data.TranslateTo(mouseXZ);
+            var bounds = src.Bounds.Intersection(grid.Bounds);
+            foreach (var xz in bounds.Enumerate())
+            {
+                var tile = src.Get(xz);
+                if (tile.HasValue)
+                {
+                    grid.Set(xz, tile.Value);
+                }
+            }
+            return bounds;
+        }
+
+        public void DoPaste()
+        {
+            if (!mode.IsPasteMode4735 || !state.HasValue)
+            {
+                return;
+            }
+
+            RevertPastePreviewTiles(state);
+            ApplyPaste(state.Value.pasteData);
+            state = null;
+            mode.IsPasteMode4735 = false;
+        }
+
+        public void OnPasteKeyDown()
+        {
+            if (mode.IsPasteMode4735)
+            {
+                isPasteKeyRepeating = true;
+            }
+            else if (!isPasteKeyRepeating)
+            {
+                mode.IsPasteMode4735 = true;
+            }
+        }
+
+        public void OnPasteKeyUp()
+        {
+            isPasteKeyRepeating = false;
+            mode.IsPasteMode4735 = false;
+        }
+
+        public (string message, bool hasError) GetStatus()
+        {
+            if (mode.IsPasteMode4735)
+            {
+                if (state.HasValue)
+                {
+                    return ($"Left click will paste {state.Value.pasteCount} tiles...", false);
+                }
+                else
+                {
+                    return ("", true);
+                }
+            }
+            else
+            {
+                return ("", false);
+            }
+        }
     }
 }
