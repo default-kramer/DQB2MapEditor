@@ -18,27 +18,33 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
     private readonly IGrid<MinimapTile> grid;
     private readonly PasteManager pasteManager;
     private readonly TextManager textManager;
+    private readonly IReadOnlyList<BaseTileModel> baseTileChoices;
+    private readonly IReadOnlyList<OverlayModel> overlayChoices;
 
     public required IslandId IslandId { get; init; }
     public required IRepainter BitmapLayers { get; init; }
 
     public MapEditorViewmodel(IGrid<MinimapTile> grid, IGrid<bool> selectionGrid, DataDefinitions definitions)
     {
+        this.baseTileChoices = definitions.BaseTiles;
+        this.overlayChoices = definitions.Overlays;
         this.grid = grid;
         this.selectionRectOrigState = new Array2D<bool>(selectionGrid.Bounds, false);
 
         SelectionGrid1346 = new SelectionGridModel(selectionGrid);
 
-        BaseTileChoices8121 = definitions.BaseTiles;
-        SelectedBaseTile7703 = BaseTileChoices8121.SingleOrDefault(b => b.BaseTileId == 7);
-        SetBaseTile7860 = true;
+        ModifyTileSpec5436 = new()
+        {
+            BaseTileChoices2327 = definitions.BaseTiles,
+            OverlayChoices4299 = definitions.Overlays,
+        };
+        ModifyTileSpec5436.SelectedBaseTile6495 = definitions.BaseTiles.SingleOrDefault(b => b.BaseTileId == 7);
+        ModifyTileSpec5436.SetBaseTile7123 = true;
 
-        OverlayChoices5094 = definitions.Overlays;
-        SelectedOverlay3158 = OverlayChoices5094.SingleOrDefault(o => o.OverlayId == 3);
-        SetOverlay3252 = true;
+        ModifyTileSpec5436.SelectedOverlay8725 = definitions.Overlays.SingleOrDefault(o => o.OverlayId == 3);
+        ModifyTileSpec5436.SetOverlay1367 = true;
 
-        Visibility8138 = new();
-        Visibility8138.IsTrue9880 = true;
+        ModifyTileSpec5436.Visibility5366.IsTrue9880 = true;
 
         CommandApplyToSelection4785 = new RelayCommand(_ => SelectionGrid1346.SelectionCount9593 > 0, _ => ApplyToSelection());
         CommandClearSelection9567 = new RelayCommand(_ => SelectionGrid1346.SelectionCount9593 > 0, _ => SelectionGrid1346.ClearSelection());
@@ -109,21 +115,7 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
 
     public IReadOnlyGrid<MinimapTile> Grid() => grid;
 
-    public IReadOnlyList<BaseTileModel> BaseTileChoices8121 { get; }
-    private BaseTileModel? _selectedBaseTile;
-    public BaseTileModel? SelectedBaseTile7703
-    {
-        get => _selectedBaseTile;
-        set => ChangeProperty(ref _selectedBaseTile, value);
-    }
-
-    public IReadOnlyList<OverlayModel> OverlayChoices5094 { get; }
-    private OverlayModel? _selectedOverlay;
-    public OverlayModel? SelectedOverlay3158
-    {
-        get => _selectedOverlay;
-        set => ChangeProperty(ref _selectedOverlay, value);
-    }
+    public TileSpecViewmodel ModifyTileSpec5436 { get; }
 
     private string _xDisplay = "";
     public string XDisplay2724
@@ -157,22 +149,6 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
         get => _hoveredOverlay;
         set => ChangeProperty(ref _hoveredOverlay, value);
     }
-
-    private bool _setBaseTile = false;
-    public bool SetBaseTile7860
-    {
-        get => _setBaseTile;
-        set => ChangeProperty(ref _setBaseTile, value);
-    }
-
-    private bool _setOverlay = false;
-    public bool SetOverlay3252
-    {
-        get => _setOverlay;
-        set => ChangeProperty(ref _setOverlay, value);
-    }
-
-    public NullableBooleanModel Visibility8138 { get; }
 
     private System.Windows.Rect? _currentZoom = null;
     System.Windows.Rect? ZoomAndPanControl.IZoomMemory.CurrentZoom
@@ -377,7 +353,7 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
                 FullHoverInfo1657 = $"Debug Info: 0x{tile.TileValue.ToString("x4")} / {tile.BaseTileId} / {tile.ApparentOverlayId}:{tile.FormulaicOverlayId} / {tile.IsVisible}";
                 // ... but show the "No Shoreline" everywhere else:
                 tile = tile.FixupShoreline(MinimapShorelineKey.NoShoreline);
-                HoveredBaseTile4659 = BaseTileChoices8121.SingleOrDefault(t => t.BaseTileId == tile.BaseTileId);
+                HoveredBaseTile4659 = baseTileChoices.SingleOrDefault(t => t.BaseTileId == tile.BaseTileId);
                 if (HoveredBaseTile4659 == null)
                 {
                     // Base tile is probably illegal. Don't show overlay info either.
@@ -385,7 +361,7 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
                 }
                 else
                 {
-                    HoveredOverlay1634 = OverlayChoices5094.SingleOrDefault(o => o.OverlayId == tile.ApparentOverlayId);
+                    HoveredOverlay1634 = overlayChoices.SingleOrDefault(o => o.OverlayId == tile.ApparentOverlayId);
                 }
             }
             else
@@ -424,19 +400,19 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
             return;
         }
 
-        ApplyModificationTo([mouseXZ]);
+        ApplyModificationTo(ModifyTileSpec5436, [mouseXZ]);
     }
 
     private void ApplyToSelection()
     {
-        ApplyModificationTo(SelectionGrid1346.Selection());
+        ApplyModificationTo(ModifyTileSpec5436, SelectionGrid1346.Selection());
     }
 
-    private void ApplyModificationTo(IEnumerable<XZ> xzs)
+    private void ApplyModificationTo(TileSpecViewmodel spec, IEnumerable<XZ> xzs)
     {
-        var baseTile = SetBaseTile7860 ? SelectedBaseTile7703 : null;
-        var overlay = SetOverlay3252 ? SelectedOverlay3158 : null;
-        var visibility = Visibility8138.Value();
+        var baseTile = spec.SetBaseTile7123 ? spec.SelectedBaseTile6495 : null;
+        var overlay = spec.SetOverlay1367 ? spec.SelectedOverlay8725 : null;
+        var visibility = spec.Visibility5366.Value();
 
         if (baseTile == null && overlay == null && !visibility.HasValue)
         {

@@ -72,50 +72,7 @@
                     <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsModifyMode6812}">MODIFY</CheckBox>
                     <TextBlock HorizontalAlignment="Center">(or hold key: 3)</TextBlock>
 
-                    <StackPanel Orientation="Vertical" Margin="8" Background="White">
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox VerticalAlignment="Center" IsChecked="{Binding SetBaseTile7860}">Set Base Tile</CheckBox>
-                            <Image Margin="4,0,0,0" Source="{Binding SelectedBaseTile7703.ImageSource}"></Image>
-                            <TextBlock VerticalAlignment="Center" Text="{Binding SelectedBaseTile7703.Name}"></TextBlock>
-                        </StackPanel>
-                        <ListView ItemsSource="{Binding BaseTileChoices8121}" SelectedItem="{Binding SelectedBaseTile7703}">
-                            <ListView.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel MaxWidth="120"></WrapPanel>
-                                </ItemsPanelTemplate>
-                            </ListView.ItemsPanel>
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <Image MaxWidth="16" Source="{Binding ImageSource}"></Image>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                    </StackPanel>
-                    <StackPanel Orientation="Vertical" Margin="8" Background="White">
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox VerticalAlignment="Center" IsChecked="{Binding SetOverlay3252}">Set Overlay</CheckBox>
-                            <Image Margin="4,0,0,0" Source="{Binding SelectedOverlay3158.ImageSource}"></Image>
-                            <TextBlock VerticalAlignment="Center" Text="{Binding SelectedOverlay3158.Name}"></TextBlock>
-                        </StackPanel>
-                        <ListView ItemsSource="{Binding OverlayChoices5094}" SelectedItem="{Binding SelectedOverlay3158}">
-                            <ListView.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel MaxWidth="120"></WrapPanel>
-                                </ItemsPanelTemplate>
-                            </ListView.ItemsPanel>
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <Image MaxWidth="16" Source="{Binding ImageSource}"></Image>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                    </StackPanel>
-                    <StackPanel Orientation="Vertical" Margin="8" Background="White" DataContext="{Binding Visibility8138}">
-                        <TextBlock>Change Visibility?</TextBlock>
-                        <RadioButton GroupName="SetVisibility" IsChecked="{Binding IsNull3392}">No Change</RadioButton>
-                        <RadioButton GroupName="SetVisibility" IsChecked="{Binding IsTrue9880}">Set Visible</RadioButton>
-                        <RadioButton GroupName="SetVisibility" IsChecked="{Binding IsFalse9122}">Set Hidden</RadioButton>
-                    </StackPanel>
+                    <local:TileSpecControl DataContext="{Binding ModifyTileSpec5436}"></local:TileSpecControl>
                     <Button Command="{Binding CommandApplyToSelection4785}" Margin="0,20,0,0">
                         <TextBlock>
                             <Run>Apply to </Run>
