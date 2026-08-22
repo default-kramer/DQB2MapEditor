@@ -15,6 +15,15 @@
             <ColumnDefinition></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Column="0" Orientation="Vertical">
+            <StackPanel.Style>
+                <Style TargetType="{x:Type StackPanel}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Mode1336.IsSpecialMode8897}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed"></Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
             <Border Margin="10" Padding="4,10,4,10" BorderThickness="3">
                 <Border.Style>
                     <Style TargetType="{x:Type Border}">
@@ -170,6 +179,31 @@
                 </StackPanel>
             </Border>
         </StackPanel>
+        <StackPanel Grid.Column="0" Orientation="Vertical">
+            <StackPanel.Style>
+                <Style TargetType="{x:Type StackPanel}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Mode1336.IsWriteTextMode2099}" Value="False">
+                            <Setter Property="Visibility" Value="Collapsed"></Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <Border Margin="10" Padding="4,10,4,10" BorderThickness="3" Background="#9EFBFF" BorderBrush="#00DDFF">
+                <StackPanel Orientation="Vertical">
+                    <TextBox Text="{Binding WriteText1898.Text1230, UpdateSourceTrigger=PropertyChanged}"
+                             Name="textToWrite" AcceptsReturn="True" MaxLines="99"></TextBox>
+                    <TextBlock Margin="0,10,0,0" TextWrapping="Wrap"
+                               Text="Left click on any tile to reposition the text"></TextBlock>
+                    <Button Margin="0,10,0,0" Command="{Binding CommandAcceptText9006}">Accept Text</Button>
+                    <Button Margin="0,6,0,0" Command="{Binding CommandDiscardText1025}">Discard Text</Button>
+                    <TextBlock Margin="0,12,0,0" Text="Letters:" HorizontalAlignment="Center" FontWeight="Bold" FontSize="16"></TextBlock>
+                    <local:TileSpecControl DataContext="{Binding WriteText1898.TileOn9672}"></local:TileSpecControl>
+                    <TextBlock Margin="0,12,0,0" Text="Background:" HorizontalAlignment="Center" FontWeight="Bold" FontSize="16"></TextBlock>
+                    <local:TileSpecControl DataContext="{Binding WriteText1898.TileOff1271}"></local:TileSpecControl>
+                </StackPanel>
+            </Border>
+        </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Vertical">
             <Border Margin="10" Padding="4,10,4,10" Background="Beige">
                 <StackPanel Orientation="Vertical">
@@ -200,11 +234,10 @@
             </Grid.RowDefinitions>
             <Grid HorizontalAlignment="Center">
                 <Grid.ContextMenu>
-                    <ContextMenu>
+                    <ContextMenu Opened="ContextMenu_Opened">
                         <MenuItem Header="Selection...">
                             <MenuItem Header="Clear Selection" Command="{Binding CommandClearSelection9567}"></MenuItem>
                             <MenuItem Header="Invert Selection" Command="{Binding CommandInvertSelection4977}"></MenuItem>
-                            <MenuItem Header="Smart Select..." Click="NotYetImplemented"></MenuItem>
                             <MenuItem Header="Copy to Clipboard" Click="Copy_Click"></MenuItem>
                         </MenuItem>
                         <MenuItem Header="Add to Selection...">
@@ -213,7 +246,7 @@
                             <MenuItem Header="Incorrect Shorelines" Command="{Binding CommandSelectIncorrectShorelines7151}"></MenuItem>
                         </MenuItem>
                         <MenuItem Header="Reset Zoom" Click="ResetZoom"></MenuItem>
-                        <MenuItem Header="Write Text..." Click="NotYetImplemented"></MenuItem>
+                        <MenuItem Header="Write Text..." Click="WriteText_Click"></MenuItem>
                         <MenuItem Header="Modify...">
                             <MenuItem Header="Reset Map...">
                                 <MenuItem Header="all tiles" Command="{Binding CommandResetMapAllTiles3843}"></MenuItem>

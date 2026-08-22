@@ -146,13 +146,28 @@ public partial class MapEditorControl : UserControl
         }
     }
 
-    private void NotYetImplemented(object sender, EventArgs e)
-    {
-        MessageBox.Show("Not yet implemented");
-    }
-
     private void Copy_Click(object sender, RoutedEventArgs e)
     {
         viewmodel?.CopySelectionToClipboard();
+    }
+
+    private void WriteText_Click(object sender, RoutedEventArgs e)
+    {
+        if (viewmodel != null)
+        {
+            viewmodel.EnterWriteTextMode(contextMenuOpenedXZ, out bool isEntering);
+            if (isEntering)
+            {
+                textToWrite.Focusable = true;
+                textToWrite.Focus();
+                textToWrite.SelectAll();
+            }
+        }
+    }
+
+    XZ contextMenuOpenedXZ; // stores position of the right click that opened the context menu
+    private void ContextMenu_Opened(object sender, RoutedEventArgs e)
+    {
+        contextMenuOpenedXZ = viewmodel?.CurrentMouseXZ() ?? XZ.Zero;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using LibDQB;
 using LibDQB.B2.Records;
 using LibDQB.DQB2Minimap;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -16,6 +17,7 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
 
     private readonly IGrid<MinimapTile> grid;
     private readonly PasteManager pasteManager;
+    private readonly TextManager textManager;
 
     public required IslandId IslandId { get; init; }
     public required IRepainter BitmapLayers { get; init; }
@@ -50,13 +52,20 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
         CommandResetMapAllTiles3843 = new RelayCommand(_ => true, _ => ResetMap(selectedTilesOnly: false));
         CommandResetMapSelectedTiles1852 = new RelayCommand(_ => true, _ => ResetMap(selectedTilesOnly: true));
         CommandInvertSelection4977 = new RelayCommand(_ => true, _ => InvertSelection());
+        CommandAcceptText9006 = new RelayCommand(_ => true, _ => AcceptText());
+        CommandDiscardText1025 = new RelayCommand(_ => true, _ => DiscardText());
 
         ResetZoom();
 
         pasteManager = new(grid, Mode1336);
 
         Mode1336.PropertyChanged += Mode1336_PropertyChanged;
+
+        WriteText1898 = MakeInitialWriteTextViewmodel(TileFontManager.DefaultFont, definitions);
+        textManager = new TextManager(grid, WriteText1898, Mode1336);
     }
+
+    public WriteTextViewmodel WriteText1898 { get; }
 
     private void Mode1336_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
@@ -91,6 +100,8 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
     public ICommand CommandResetMapAllTiles3843 { get; }
     public ICommand CommandResetMapSelectedTiles1852 { get; }
     public ICommand CommandInvertSelection4977 { get; }
+    public ICommand CommandAcceptText9006 { get; }
+    public ICommand CommandDiscardText1025 { get; }
 
     public SelectionGridModel SelectionGrid1346 { get; }
     private readonly ModeModel _mode = new();
@@ -182,9 +193,15 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
     private static bool IsModifyKey(Key key) => key == Key.D3 || key == Key.NumPad3;
     private static bool IsPasteKey(Key key) => key == Key.D4 || key == Key.NumPad4;
 
+    private bool AcceptKeyboardShortcuts => !Mode1336.IsSpecialMode8897;
+
     public void OnPreviewKeyDown(Key key)
     {
-        if (IsModifyKey(key))
+        if (!AcceptKeyboardShortcuts)
+        {
+            // ignore
+        }
+        else if (IsModifyKey(key))
         {
             this.Mode1336.IsModifyMode6812 = true;
         }
@@ -204,7 +221,11 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
 
     public void OnPreviewKeyUp(Key key)
     {
-        if (IsModifyKey(key))
+        if (!AcceptKeyboardShortcuts)
+        {
+            // ignore
+        }
+        else if (IsModifyKey(key))
         {
             this.Mode1336.IsModifyMode6812 = false;
         }
@@ -283,6 +304,13 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
                 pasteManager.DoPaste();
             }
         }
+        else if (this.Mode1336.IsWriteTextMode2099)
+        {
+            if (isLeftMouseDown && !oldLeft)
+            {
+                WriteText1898.Position = mouseXZ;
+            }
+        }
     }
 
     private void UpdateRectSelection(XZ newXZ, XZ prevXZ)
@@ -330,6 +358,7 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
     private (XZ loc, bool isSelecting)? selectionRectDragStart = null;
 
     private XZ mouseXZ = XZ.Zero.Add(-1, -1);
+    internal XZ CurrentMouseXZ() => mouseXZ;
     public void OnMousePositionChanged(XZ xz)
     {
         var prevMouseXZ = mouseXZ;
@@ -578,6 +607,32 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
         Clipboard.SetData(MinimapClipboardData.Format, clipboardData.ToClipboardObject());
     }
 
+    public void EnterWriteTextMode(XZ initialPosition, out bool isEntering)
+    {
+        if (!Mode1336.IsWriteTextMode2099)
+        {
+            WriteText1898.Text1230 = "WRITE\nHERE";
+            WriteText1898.Position = initialPosition;
+            Mode1336.IsWriteTextMode2099 = true;
+            isEntering = true;
+        }
+        else
+        {
+            isEntering = false;
+        }
+    }
+
+    private void AcceptText()
+    {
+        Mode1336.IsWriteTextMode2099 = false;
+    }
+
+    private void DiscardText()
+    {
+        textManager.Revert();
+        Mode1336.IsWriteTextMode2099 = false;
+    }
+
     sealed class PasteManager
     {
         /// <summary>
@@ -726,5 +781,205 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
                 return ("", false);
             }
         }
+    }
+
+    public sealed class WriteTextViewmodel : ViewmodelBase
+    {
+        private XZ _position;
+        internal XZ Position
+        {
+            get => _position;
+            set => ChangeProperty(ref _position, value);
+        }
+
+        private string _text = "";
+        public string Text1230
+        {
+            get => _text;
+            set => ChangeProperty(ref _text, value);
+        }
+
+        public required ITileFont Font { get; init; }
+
+        public required TileSpecViewmodel TileOn9672 { get; init; }
+        public required TileSpecViewmodel TileOff1271 { get; init; }
+
+        internal void SubscribeNestedPropertyChanges(PropertyChangedEventHandler handler)
+        {
+            this.PropertyChanged += handler;
+            this.TileOn9672.PropertyChanged += handler;
+            this.TileOn9672.Visibility5366.PropertyChanged += handler;
+            this.TileOff1271.PropertyChanged += handler;
+            this.TileOff1271.Visibility5366.PropertyChanged += handler;
+        }
+    }
+
+    sealed class TextManager
+    {
+        private readonly Array2D<MinimapTile> backup;
+        private readonly IGrid<MinimapTile> grid;
+        private readonly WriteTextViewmodel textVM;
+
+        sealed record TileSpec // Equality matters for detecting when we need to update
+        {
+            public required BaseTileId? BaseTileId { get; init; }
+            public required OverlayId? OverlayId { get; init; }
+            public required bool? Visibility { get; init; }
+        }
+
+        sealed record State // Equality matters for detecting when we need to update
+        {
+            public required XZ Position { get; init; }
+            public required string Text { get; init; }
+            public required TileSpec TileOn { get; init; }
+            public required TileSpec TileOff { get; init; }
+            public required ITileFont Font { get; init; }
+        }
+
+        private (State state, LibDQB.Rect bounds)? current;
+        private readonly Func<bool> isEnabled;
+
+        public TextManager(IGrid<MinimapTile> grid, WriteTextViewmodel textVM, ModeModel mode)
+        {
+            this.grid = grid;
+            this.backup = new Array2D<MinimapTile>(grid.Bounds, default);
+            this.textVM = textVM;
+            this.isEnabled = () => mode.IsWriteTextMode2099;
+            textVM.SubscribeNestedPropertyChanges((s, e) => Refresh());
+            mode.PropertyChanged += (s, e) => OnModeChanged();
+        }
+
+        private void OnModeChanged()
+        {
+            bool enabled = isEnabled();
+            if (enabled)
+            {
+                if (current == null)
+                {
+                    backup.CopyFrom(grid);
+                }
+                Refresh();
+            }
+            else
+            {
+                current = null;
+            }
+        }
+
+        public void Revert()
+        {
+            if (current.HasValue)
+            {
+                foreach (var xz in current.Value.bounds.Enumerate())
+                {
+                    grid.Set(xz, backup.Get(xz));
+                }
+            }
+        }
+
+        private void Refresh()
+        {
+            if (!isEnabled())
+            {
+                return;
+            }
+
+            var newState = new State
+            {
+                Font = textVM.Font,
+                Position = textVM.Position,
+                Text = textVM.Text1230,
+                TileOn = BuildTileSpec(textVM.TileOn9672),
+                TileOff = BuildTileSpec(textVM.TileOff1271),
+            };
+
+            if (newState == current?.state)
+            {
+                return;
+            }
+
+            Revert();
+            var newBounds = Apply(newState, grid, backup);
+            current = (newState, newBounds);
+            return;
+        }
+
+        private static LibDQB.Rect Apply(State state, IGrid<MinimapTile> grid, IReadOnlyGrid<MinimapTile> backup)
+        {
+            var letters = state.Font.CreateText(state.Text).TranslateTo(state.Position);
+            var bounds = letters.Bounds.Intersection(grid.Bounds);
+            foreach (var xz in bounds.Enumerate())
+            {
+                var spec = letters.Get(xz) ? state.TileOn : state.TileOff;
+                var tile = grid.Get(xz);
+                if (spec.BaseTileId.HasValue)
+                {
+                    tile = tile.ReplaceBaseTile(spec.BaseTileId.Value);
+                }
+                if (spec.OverlayId.HasValue)
+                {
+                    tile = tile.ReplaceOverlay(spec.OverlayId.Value);
+                }
+                if (spec.Visibility.HasValue)
+                {
+                    tile = tile.ReplaceVisibility(spec.Visibility.Value);
+                }
+                grid.Set(xz, tile);
+            }
+            return bounds;
+        }
+
+        private static TileSpec BuildTileSpec(TileSpecViewmodel vm)
+        {
+            BaseTileId? baseTileId = null;
+            OverlayId? overlayId = null;
+
+            if (vm.SetBaseTile7123 && vm.SelectedBaseTile6495 != null)
+            {
+                baseTileId = vm.SelectedBaseTile6495.BaseTileId;
+            }
+            if (vm.SetOverlay1367 && vm.SelectedOverlay8725 != null)
+            {
+                overlayId = vm.SelectedOverlay8725.OverlayId;
+            }
+
+            return new TileSpec
+            {
+                BaseTileId = baseTileId,
+                OverlayId = overlayId,
+                Visibility = vm.Visibility5366.Value(),
+            };
+        }
+    }
+
+    private static WriteTextViewmodel MakeInitialWriteTextViewmodel(ITileFont font, DataDefinitions definitions)
+    {
+        var vm = new WriteTextViewmodel
+        {
+            Font = font,
+            TileOn9672 = new TileSpecViewmodel
+            {
+                BaseTileChoices2327 = definitions.BaseTiles,
+                OverlayChoices4299 = definitions.Overlays,
+                SetBaseTile7123 = true,
+                SetOverlay1367 = false,
+            },
+            TileOff1271 = new TileSpecViewmodel
+            {
+                BaseTileChoices2327 = definitions.BaseTiles,
+                OverlayChoices4299 = definitions.Overlays,
+                SetBaseTile7123 = true,
+                SetOverlay1367 = false,
+            }
+        };
+
+        vm.TileOn9672.SelectedBaseTile6495 = definitions.BaseTiles.FirstOrDefault(b => b.BaseTileId == 7);
+        vm.TileOn9672.SelectedOverlay8725 = definitions.Overlays.FirstOrDefault();
+        vm.TileOn9672.Visibility5366.IsTrue9880 = true;
+        vm.TileOff1271.SelectedBaseTile6495 = definitions.BaseTiles.FirstOrDefault(b => b.BaseTileId == 4);
+        vm.TileOff1271.SelectedOverlay8725 = definitions.Overlays.FirstOrDefault();
+        vm.TileOff1271.Visibility5366.IsTrue9880 = true;
+
+        return vm;
     }
 }

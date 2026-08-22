@@ -13,6 +13,7 @@ sealed class ModeModel : ViewmodelBase
         RectSelect,
         Modify,
         Paste,
+        WriteText,
     };
 
     private Mode _mode = Mode.Pan;
@@ -59,5 +60,13 @@ sealed class ModeModel : ViewmodelBase
         set => Set(value, Mode.Paste);
     }
 
+    public bool IsWriteTextMode2099
+    {
+        get => _mode == Mode.WriteText;
+        set => Set(value, Mode.WriteText);
+    }
+
     public bool IsAnySelectMode4440 => IsSelectMode5073 || IsRectSelectMode2843;
+
+    public bool IsSpecialMode8897 => IsWriteTextMode2099;
 }
