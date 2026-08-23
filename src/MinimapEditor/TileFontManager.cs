@@ -127,9 +127,11 @@ static class TileFontManager
                 return false;
             }
 
-            var fallback = BuildDefaultFallback(chars, InclusiveRange('A', 'Z'))
-                ?? BuildDefaultFallback(chars, InclusiveRange('a', 'z'))
+            var fallback = BuildDefaultFallback(chars, InclusiveRange('A', 'Z').Concat(InclusiveRange('0', '9')))
+                ?? BuildDefaultFallback(chars, InclusiveRange('a', 'z').Concat(InclusiveRange('0', '9')))
                 ?? BuildDefaultFallback(chars, chars.Keys);
+
+            SetupFallbacks(chars);
 
             font = new SimpleTileFont(chars, fallback);
             return true;
@@ -206,6 +208,25 @@ static class TileFontManager
             {
                 yield return min;
                 min++;
+            }
+        }
+
+        private static void SetupFallbacks(Dictionary<char, TileChar> font)
+        {
+            foreach (char lower in InclusiveRange('a', 'z'))
+            {
+                char upper = char.ToUpperInvariant(lower);
+                var lowerTile = font.GetValueOrDefault(lower);
+                var upperTile = font.GetValueOrDefault(upper);
+
+                if (lowerTile == null && upperTile != null)
+                {
+                    font[lower] = upperTile;
+                }
+                if (upperTile == null && lowerTile != null)
+                {
+                    font[upper] = lowerTile;
+                }
             }
         }
 
@@ -546,5 +567,207 @@ X
 X
 .
 X_
+
+// period, 1 trailing space
+.
+.
+.
+.
+.
+.
+.
+.
+X_
+
+0
+.XXX.
+X...X
+X...X
+X.X.X
+X.X.X
+X...X
+X...X
+.XXX._
+
+1
+...X
+..XX
+.X.X
+X..X
+...X
+...X
+...X
+...X_
+
+2
+.XXX.
+X...X
+X...X
+...X.
+..X..
+.X...
+X....
+XXXXX
+
+3
+.XXX.
+X...X
+....X
+..XX.
+....X
+....X
+X...X
+.XXX._
+
+4
+...XX
+..X.X
+.X..X
+X...X
+XXXXX
+....X
+....X
+....X_
+
+5
+XXXXX
+X....
+X....
+XXXX.
+....X
+....X
+X...X
+.XXX._
+
+6
+.XXX.
+X...X
+X....
+XXXX.
+X...X
+X...X
+X...X
+.XXX._
+
+7
+XXXXX
+....X
+....X
+...X.
+...X.
+..X..
+..X..
+..X.._
+
+8
+.XXX.
+X...X
+X...X
+.XXX.
+X...X
+X...X
+X...X
+.XXX._
+
+9
+.XXX.
+X...X
+X...X
+.XXXX
+....X
+....X
+X...X
+.XXX._
+
+?
+.XXX.
+X...X
+....X
+...X.
+..X..
+..X..
+.....
+..X.._
+
+(
+.XX
+X..
+X..
+X..
+X..
+X..
+X..
+.XX_
+
+)
+XX.
+..X
+..X
+..X
+..X
+..X
+..X
+XX._
+
+[
+XXX
+X..
+X..
+X..
+X..
+X..
+X..
+XXX_
+
+]
+XXX
+..X
+..X
+..X
+..X
+..X
+..X
+XXX_
+
+{"{"}
+..XX
+.X..
+.X..
+X...
+.X..
+.X..
+.X..
+..XX_
+
+{"}"}
+XX..
+..X.
+..X.
+...X
+..X.
+..X.
+..X.
+XX.._
+
+@
+.XXXX.
+X....X
+X.XX.X
+X.X.XX
+X.X..X
+X..XX.
+X.....
+.XXXX._
+
+'
+X
+X
+.
+.
+.
+.
+.
+._
+
 ";
 }
