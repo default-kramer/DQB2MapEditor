@@ -42,10 +42,12 @@ static class TileFontManager
         }
 
         private readonly IReadOnlyDictionary<char, TileChar> chars;
+        private readonly TileChar? defaultFallbackChar;
 
-        private SimpleTileFont(IReadOnlyDictionary<char, TileChar> chars)
+        private SimpleTileFont(IReadOnlyDictionary<char, TileChar> chars, TileChar? defaultFallback)
         {
             this.chars = chars;
+            this.defaultFallbackChar = defaultFallback;
         }
 
         public IReadOnlyGrid<bool> CreateText(string text, HashSet<char> missingCharCollector)
@@ -83,9 +85,9 @@ static class TileFontManager
                 else
                 {
                     missingCharCollector.Add(itr.Current);
-                    if (chars.TryGetValue(' ', out var spaceChar))
+                    if (defaultFallbackChar != null)
                     {
-                        PutChar(spaceChar);
+                        PutChar(defaultFallbackChar);
                     }
                 }
             }
@@ -125,7 +127,11 @@ static class TileFontManager
                 return false;
             }
 
-            font = new SimpleTileFont(chars);
+            var fallback = BuildDefaultFallback(chars, InclusiveRange('A', 'Z'))
+                ?? BuildDefaultFallback(chars, InclusiveRange('a', 'z'))
+                ?? BuildDefaultFallback(chars, chars.Keys);
+
+            font = new SimpleTileFont(chars, fallback);
             return true;
         }
 
@@ -187,6 +193,55 @@ static class TileFontManager
                 default:
                     return true;
             }
+        }
+
+        private static IEnumerable<char> InclusiveRange(char min, char max)
+        {
+            if (max < min)
+            {
+                throw new ArgumentException(nameof(max));
+            }
+
+            while (min <= max)
+            {
+                yield return min;
+                min++;
+            }
+        }
+
+        private static TileChar? BuildDefaultFallback(IReadOnlyDictionary<char, TileChar> font, IEnumerable<char> sampleFrom)
+        {
+            var chars = sampleFrom.Select(font.GetValueOrDefault)
+                .WhereNotNull()
+                .ToList();
+
+            if (chars.Count == 0)
+            {
+                return null;
+            }
+
+            T GetMostCommonValue<T>(Func<TileChar, T> selector) => chars.Select(selector)
+                .GroupBy(val => val)
+                .OrderByDescending(grp => grp.Count())
+                .First()
+                .First();
+
+            var width = GetMostCommonValue(x => x.Grid.Bounds.Size.X);
+            var height = GetMostCommonValue(x => x.Grid.Bounds.Size.Z);
+            var horizontalSpace = GetMostCommonValue(x => x.HorizontalSpace);
+
+            var grid = new ConstantGrid<bool>
+            {
+                Bounds = new Rect(XZ.Zero, new XZ(width, height)),
+                Value = true,
+            };
+
+            return new TileChar
+            {
+                Character = (char)0,
+                Grid = grid,
+                HorizontalSpace = horizontalSpace,
+            };
         }
     }
 

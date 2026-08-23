@@ -22,4 +22,9 @@ static class Util
         field = field ?? valueFactory();
         return field;
     }
+
+    public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> seq) where T : class
+    {
+        return seq.Where(x => x != null)!;
+    }
 }
