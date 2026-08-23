@@ -11,12 +11,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Content\hammer256.png" />
     <None Remove="SheetRetro.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Content\hammer256.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="SheetRetro.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
