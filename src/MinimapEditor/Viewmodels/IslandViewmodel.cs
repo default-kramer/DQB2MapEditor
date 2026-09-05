@@ -27,14 +27,12 @@ sealed class IslandViewmodel : ViewmodelBase
     }
 
     private readonly Dependencies deps;
-    private readonly IReadOnlyGrid<MinimapTile> unmodifiedMinimap;
     private readonly Lazy<MapEditorViewmodel> mapEditorVM;
 
     public IslandViewmodel(Dependencies deps, IslandId islandId)
     {
         this.deps = deps;
         IslandId2242 = islandId;
-        unmodifiedMinimap = Array2D<MinimapTile>.CopyFrom(deps.Cmndat.GetMinimap(islandId));
         mapEditorVM = new Lazy<MapEditorViewmodel>(_rebuildMapEditorVM);
         CommandOpenMinimap5775 = new RelayCommand(_ => true, _ => OpenMinimap());
     }
@@ -77,16 +75,16 @@ sealed class IslandViewmodel : ViewmodelBase
         var islandId = this.IslandId2242;
         var minimap = deps.Cmndat.GetMinimap(islandId);
 
+        var changeCountingGrid = new CountChangedTiles(minimap)
+        {
+            IslandVM = this,
+        };
+
         var repainter = new BitmapRepainter<WriteableBitmap>(Tilesheet);
 
         var tileDecorator = new WpfMinimapGrid
         {
-            Grid = new CountChangedTiles
-            {
-                Grid = minimap,
-                IslandVM = this,
-                UnmodifiedGrid = unmodifiedMinimap,
-            },
+            Grid = changeCountingGrid,
             Repainter = repainter,
             Dispatcher = Dispatcher.CurrentDispatcher,
         };
@@ -106,6 +104,7 @@ sealed class IslandViewmodel : ViewmodelBase
         {
             IslandId = islandId,
             BitmapLayers = repainter,
+            OnCmndatSaved = () => changeCountingGrid.OnCmndatSaved(),
         };
         return viewmodel;
     }
@@ -122,8 +121,14 @@ sealed class IslandViewmodel : ViewmodelBase
     sealed class CountChangedTiles : IGrid<MinimapTile>
     {
         public required IslandViewmodel IslandVM { get; init; }
-        public required IReadOnlyGrid<MinimapTile> UnmodifiedGrid { get; init; }
-        public required IGrid<MinimapTile> Grid { get; init; }
+        public IGrid<MinimapTile> Grid { get; }
+        private IReadOnlyGrid<MinimapTile> unmodifiedGrid;
+        public CountChangedTiles(IGrid<MinimapTile> grid)
+        {
+            this.Grid = grid;
+            this.unmodifiedGrid = Array2D<MinimapTile>.CopyFrom(grid);
+        }
+
 
         Rect IReadOnlyGrid<MinimapTile>.Bounds => Grid.Bounds;
 
@@ -139,7 +144,7 @@ sealed class IslandViewmodel : ViewmodelBase
 
             Grid.Set(xz, value);
 
-            var origVal = UnmodifiedGrid.Get(xz);
+            var origVal = unmodifiedGrid.Get(xz);
             if (origVal == value)
             {
                 IslandVM.ChangedTileCount4506--;
@@ -148,6 +153,12 @@ sealed class IslandViewmodel : ViewmodelBase
             {
                 IslandVM.ChangedTileCount4506++;
             }
+        }
+
+        public void OnCmndatSaved()
+        {
+            this.unmodifiedGrid = Array2D<MinimapTile>.CopyFrom(this);
+            IslandVM.ChangedTileCount4506 = 0;
         }
     }
 }

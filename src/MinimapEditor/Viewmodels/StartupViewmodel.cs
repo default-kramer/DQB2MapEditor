@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Numerics;
 using System.Text;
@@ -237,7 +238,7 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
         var islandId = islandVM.IslandId2242;
 
         var tab = Tabs4685
-            .Where(t => t.Viewmodel2249 is MapEditorViewmodel mev && mev.IslandId == islandId)
+            .Where(t => t.HoldsMapEditor(out var mev) && mev.IslandId == islandId)
             .SingleOrDefault();
 
         if (tab == null)
@@ -331,6 +332,14 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
             RefreshSteamWarning();
         }
 
+        foreach (var tab in Tabs4685)
+        {
+            if (tab.HoldsMapEditor(out var mev))
+            {
+                mev.OnCmndatSaved();
+            }
+        }
+
         MessageBox.Show("Saved Successfully!", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
@@ -346,6 +355,12 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
         {
             get => _header;
             set => ChangeProperty(ref _header, value);
+        }
+
+        public bool HoldsMapEditor([NotNullWhen(true)] out MapEditorViewmodel? vm)
+        {
+            vm = Viewmodel2249 as MapEditorViewmodel;
+            return vm != null;
         }
     }
 }
