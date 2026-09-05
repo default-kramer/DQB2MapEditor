@@ -7,7 +7,7 @@ using System.Windows.Media;
 
 namespace MinimapEditor;
 
-sealed class DataDefinitions
+public sealed class DataDefinitions
 {
     public interface ITilesheet
     {

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MinimapEditor.Viewmodels;
 
-sealed class ModeModel : ViewmodelBase
+public sealed class ModeModel : ViewmodelBase
 {
     enum Mode
     {

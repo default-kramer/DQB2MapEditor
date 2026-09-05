@@ -11,7 +11,7 @@ using System.Windows.Threading;
 
 namespace MinimapEditor.Viewmodels;
 
-sealed class IslandViewmodel : ViewmodelBase
+public sealed class IslandViewmodel : ViewmodelBase
 {
     public interface ICallback
     {

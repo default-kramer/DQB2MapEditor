@@ -6,9 +6,9 @@ using System.Windows.Media;
 
 namespace MinimapEditor.Viewmodels;
 
-sealed class OverlayModel
+public sealed class OverlayModel
 {
     public required ImageSource ImageSource { get; init; }
     public required string Name { get; init; }
-    internal required OverlayId OverlayId { get; init; }
+    public required OverlayId OverlayId { get; init; }
 }

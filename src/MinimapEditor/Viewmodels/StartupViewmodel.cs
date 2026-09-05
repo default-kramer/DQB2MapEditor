@@ -13,8 +13,10 @@ using System.Windows.Input;
 
 namespace MinimapEditor.Viewmodels;
 
-sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
+public sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
 {
+    public DialogManager DialogManager { get; init; } = new();
+
     public StartupViewmodel()
     {
         readmeTab = new TabItemViewmodel()
@@ -73,6 +75,8 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
             nameof(CanSave8786),
             nameof(WindowTitle8643));
     }
+
+    public bool HasActiveCmndat() => ActiveCmndat != null;
 
     public string CmndatPath2301 => ActiveCmndat?.FullPath ?? "";
     public bool CanSave8786 => ActiveCmndat.HasValue;
@@ -152,7 +156,7 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
             dialog.InitialDirectory = sd.FullName;
         }
 
-        if (dialog.ShowDialog().GetValueOrDefault(false))
+        if (DialogManager.ShowDialog(dialog).GetValueOrDefault(false))
         {
             LoadCmndat(dialog.FileName);
         }
@@ -314,7 +318,7 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
         saveDialog.FileName = ActiveCmndat.Value.FullPath;
         saveDialog.Filter = "DQB2 CMNDAT files|*CMNDAT.BIN|All files|*.*";
 
-        bool ok = saveDialog.ShowDialog().GetValueOrDefault(false);
+        bool ok = DialogManager.ShowDialog(saveDialog).GetValueOrDefault(false);
         if (!ok)
         {
             return;
@@ -337,12 +341,12 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
             island.OnCmndatSaved();
         }
 
-        MessageBox.Show("Saved Successfully!", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+        DialogManager.ShowMessageBox("Saved Successfully!", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     public sealed class TabItemViewmodel : ViewmodelBase
     {
-        internal required bool ClosesWithCmndat { get; init; }
+        public required bool ClosesWithCmndat { get; init; }
         public required object Viewmodel2249 { get; init; }
         public required ICommand? CommandCloseTab2176 { get; init; }
         public bool CanCloseTab4739 => CommandCloseTab2176 != null;

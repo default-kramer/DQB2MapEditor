@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MinimapEditor.Viewmodels;
 
-sealed class NullableBooleanModel : ViewmodelBase
+public sealed class NullableBooleanModel : ViewmodelBase
 {
     private bool? val = null;
 

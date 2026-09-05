@@ -6,7 +6,7 @@ using System.Text;
 
 namespace MinimapEditor.Viewmodels;
 
-sealed class TileSpecViewmodel : ViewmodelBase
+public sealed class TileSpecViewmodel : ViewmodelBase
 {
     private bool _setBaseTile = true;
     public bool SetBaseTile7123

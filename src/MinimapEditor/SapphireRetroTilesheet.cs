@@ -9,7 +9,7 @@ using System.Windows.Media.Imaging;
 
 namespace MinimapEditor;
 
-sealed class SapphireRetroTilesheet : BitmapRepainter<WriteableBitmap>.ITilesheet, DataDefinitions.ITilesheet
+public sealed class SapphireRetroTilesheet : BitmapRepainter<WriteableBitmap>.ITilesheet, DataDefinitions.ITilesheet
 {
     sealed record TilesheetItem(BitmapSource Bitmap, XZ PositionInTilesheet);
 

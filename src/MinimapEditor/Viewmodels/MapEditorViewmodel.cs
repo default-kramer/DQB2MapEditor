@@ -8,7 +8,7 @@ using System.Windows.Media;
 
 namespace MinimapEditor.Viewmodels;
 
-sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
+public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
 {
     public interface IRepainter
     {
@@ -222,7 +222,9 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
     private bool isLeftMouseDown = false;
     private bool isRightMouseDown = false;
 
-    public void OnMouseEvent(MouseEventArgs e)
+    public void OnMouseEvent(MouseEventArgs e) => OnMouseEvent(MouseEventInfo.Create(e));
+
+    public void OnMouseEvent(MouseEventInfo e)
     {
         bool oldLeft = isLeftMouseDown;
         isLeftMouseDown = e.LeftButton == MouseButtonState.Pressed;

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace MinimapEditor.Viewmodels;
 
-sealed class SelectionGridModel : ViewmodelBase, IGrid<bool>
+public sealed class SelectionGridModel : ViewmodelBase, IGrid<bool>
 {
     private readonly IGrid<bool> selectionGrid;
 

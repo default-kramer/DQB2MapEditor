@@ -6,7 +6,7 @@ using System.Text;
 
 namespace MinimapEditor.Viewmodels;
 
-class ViewmodelBase : INotifyPropertyChanged
+public class ViewmodelBase : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 

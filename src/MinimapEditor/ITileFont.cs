@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MinimapEditor;
 
-interface ITileFont
+public interface ITileFont
 {
     IReadOnlyGrid<bool> CreateText(string text, HashSet<char> missingCharCollector);
 
