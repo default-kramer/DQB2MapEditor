@@ -10,6 +10,9 @@
         MinHeight="900" MinWidth="1050"
         Title="{Binding WindowTitle8643}">
     <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:ReadmeViewmodel}">
+            <local:ReadmeControl></local:ReadmeControl>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:StartupViewmodel}">
             <local:StartupControl></local:StartupControl>
         </DataTemplate>

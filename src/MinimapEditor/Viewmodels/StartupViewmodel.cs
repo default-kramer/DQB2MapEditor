@@ -16,8 +16,18 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
 {
     public StartupViewmodel()
     {
+        readmeTab = new TabItemViewmodel()
+        {
+            ClosesWithCmndat = false,
+            Viewmodel2249 = new ReadmeViewmodel(),
+            Header5924 = "README",
+            CommandCloseTab2176 = new RelayCommand(_ => true, _ => CloseReadmeTab()),
+        };
+        Tabs4685.Add(readmeTab);
+
         startupTab = new TabItemViewmodel()
         {
+            ClosesWithCmndat = false,
             Viewmodel2249 = this,
             Header5924 = "Startup",
             CommandCloseTab2176 = null,
@@ -40,6 +50,7 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
         set => ChangeProperty(ref _selectedTab, value);
     }
 
+    private readonly TabItemViewmodel readmeTab;
     private readonly TabItemViewmodel startupTab;
     private SapphireRetroTilesheet? _tilesheet = null;
     private SapphireRetroTilesheet Tilesheet => Util.LoadOnce(ref _tilesheet, () => SapphireRetroTilesheet.Instance);
@@ -112,7 +123,7 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
         SelectedIsland2951 = null;
         for (int i = Tabs4685.Count - 1; i >= 0; i--)
         {
-            if (Tabs4685[i] != startupTab)
+            if (Tabs4685[i].ClosesWithCmndat)
             {
                 Tabs4685.RemoveAt(i);
             }
@@ -234,6 +245,7 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
             var vm = islandVM.GetMapEditorVM();
             tab = new TabItemViewmodel
             {
+                ClosesWithCmndat = true,
                 Header5924 = islandVM.IslandName3332,
                 Viewmodel2249 = vm,
                 CommandCloseTab2176 = new RelayCommand(_ => true, _ => CloseTab(vm)),
@@ -247,7 +259,14 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
     private void CloseTab(MapEditorViewmodel vm)
     {
         var tab = Tabs4685.SingleOrDefault(t => t.Viewmodel2249 == vm);
-        if (tab != null)
+        CloseTab(tab);
+    }
+
+    private void CloseReadmeTab() => CloseTab(readmeTab);
+
+    private void CloseTab(TabItemViewmodel? tab)
+    {
+        if (tab != null && Tabs4685.Contains(tab))
         {
             if (SelectedTab4149 == tab)
             {
@@ -317,6 +336,7 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
 
     public sealed class TabItemViewmodel : ViewmodelBase
     {
+        internal required bool ClosesWithCmndat { get; init; }
         public required object Viewmodel2249 { get; init; }
         public required ICommand? CommandCloseTab2176 { get; init; }
         public bool CanCloseTab4739 => CommandCloseTab2176 != null;
