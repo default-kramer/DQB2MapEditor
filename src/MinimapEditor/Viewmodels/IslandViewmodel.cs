@@ -27,13 +27,13 @@ sealed class IslandViewmodel : ViewmodelBase
     }
 
     private readonly Dependencies deps;
-    private readonly Lazy<MapEditorViewmodel> mapEditorVM;
+    private readonly Lazy<(MapEditorViewmodel, CountChangedTiles)> mapEditorVM;
 
     public IslandViewmodel(Dependencies deps, IslandId islandId)
     {
         this.deps = deps;
         IslandId2242 = islandId;
-        mapEditorVM = new Lazy<MapEditorViewmodel>(_rebuildMapEditorVM);
+        mapEditorVM = new Lazy<(MapEditorViewmodel, CountChangedTiles)>(_rebuildMapEditorVM);
         CommandOpenMinimap5775 = new RelayCommand(_ => true, _ => OpenMinimap());
     }
 
@@ -66,9 +66,9 @@ sealed class IslandViewmodel : ViewmodelBase
         yield return ("??? 12", new IslandId(12));
     }
 
-    public MapEditorViewmodel GetMapEditorVM() => mapEditorVM.Value;
+    public MapEditorViewmodel GetMapEditorVM() => mapEditorVM.Value.Item1;
 
-    private MapEditorViewmodel _rebuildMapEditorVM()
+    private (MapEditorViewmodel, CountChangedTiles) _rebuildMapEditorVM()
     {
         var Tilesheet = deps.Tilesheet;
         var DataDefinitions = deps.DataDefinitions;
@@ -104,14 +104,21 @@ sealed class IslandViewmodel : ViewmodelBase
         {
             IslandId = islandId,
             BitmapLayers = repainter,
-            OnCmndatSaved = () => changeCountingGrid.OnCmndatSaved(),
         };
-        return viewmodel;
+        return (viewmodel, changeCountingGrid);
     }
 
     private void OpenMinimap()
     {
         deps.Callback.OpenMinimap(this);
+    }
+
+    public void OnCmndatSaved()
+    {
+        if (mapEditorVM.IsValueCreated)
+        {
+            mapEditorVM.Value.Item2.OnCmndatSaved();
+        }
     }
 
     /// <summary>

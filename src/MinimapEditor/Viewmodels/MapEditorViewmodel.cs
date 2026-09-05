@@ -23,7 +23,6 @@ sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomMemory
 
     public required IslandId IslandId { get; init; }
     public required IRepainter BitmapLayers { get; init; }
-    public required Action OnCmndatSaved { get; init; }
 
     public MapEditorViewmodel(IGrid<MinimapTile> grid, IGrid<bool> selectionGrid, DataDefinitions definitions)
     {

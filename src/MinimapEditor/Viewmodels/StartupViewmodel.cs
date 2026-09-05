@@ -332,12 +332,9 @@ sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
             RefreshSteamWarning();
         }
 
-        foreach (var tab in Tabs4685)
+        foreach (var island in IslandChoices8930)
         {
-            if (tab.HoldsMapEditor(out var mev))
-            {
-                mev.OnCmndatSaved();
-            }
+            island.OnCmndatSaved();
         }
 
         MessageBox.Show("Saved Successfully!", "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
