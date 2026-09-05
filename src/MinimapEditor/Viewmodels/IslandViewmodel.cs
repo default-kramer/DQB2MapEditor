@@ -2,9 +2,6 @@
 using LibDQB.B2;
 using LibDQB.B2.Records;
 using LibDQB.DQB2Minimap;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -27,19 +24,22 @@ public sealed class IslandViewmodel : ViewmodelBase
     }
 
     private readonly Dependencies deps;
-    private readonly Lazy<(MapEditorViewmodel, CountChangedTiles)> mapEditorVM;
+    private readonly Lazy<MapEditor> mapEditor;
 
     public IslandViewmodel(Dependencies deps, IslandId islandId)
     {
         this.deps = deps;
         IslandId2242 = islandId;
-        mapEditorVM = new Lazy<(MapEditorViewmodel, CountChangedTiles)>(_rebuildMapEditorVM);
+        mapEditor = new Lazy<MapEditor>(_rebuildMapEditor);
         CommandOpenMinimap5775 = new RelayCommand(_ => true, _ => OpenMinimap());
+        CommandDiscardChanges2227 = new RelayCommand(_ => ChangedTileCount4506 > 0, _ => DiscardChanges());
     }
 
+    public required DialogManager DialogManager { get; init; }
     public IslandId IslandId2242 { get; }
     public required string IslandName3332 { get; init; }
     public ICommand CommandOpenMinimap5775 { get; }
+    public ICommand CommandDiscardChanges2227 { get; }
 
     private int _changedTileCount = 0;
     public int ChangedTileCount4506
@@ -66,9 +66,34 @@ public sealed class IslandViewmodel : ViewmodelBase
         yield return ("??? 12", new IslandId(12));
     }
 
-    public MapEditorViewmodel GetMapEditorVM() => mapEditorVM.Value.Item1;
+    public MapEditorViewmodel GetMapEditorVM() => mapEditor.Value.VM;
 
-    private (MapEditorViewmodel, CountChangedTiles) _rebuildMapEditorVM()
+    sealed class MapEditor
+    {
+        public MapEditorViewmodel VM { get; }
+        private readonly CountChangedTiles countChangedTiles;
+        private readonly WpfMinimapGrid wpfMinimapGrid;
+
+        public MapEditor(MapEditorViewmodel vm, CountChangedTiles countChangedTiles, WpfMinimapGrid wpfMinimapGrid)
+        {
+            this.VM = vm;
+            this.countChangedTiles = countChangedTiles;
+            this.wpfMinimapGrid = wpfMinimapGrid;
+        }
+
+        public void DiscardChanges()
+        {
+            countChangedTiles.DiscardChanges();
+            wpfMinimapGrid.RefreshAll();
+        }
+
+        public void OnCmndatSaved()
+        {
+            countChangedTiles.OnCmndatSaved();
+        }
+    }
+
+    private MapEditor _rebuildMapEditor()
     {
         var Tilesheet = deps.Tilesheet;
         var DataDefinitions = deps.DataDefinitions;
@@ -105,7 +130,7 @@ public sealed class IslandViewmodel : ViewmodelBase
             IslandId = islandId,
             BitmapLayers = repainter,
         };
-        return (viewmodel, changeCountingGrid);
+        return new MapEditor(viewmodel, changeCountingGrid, tileDecorator);
     }
 
     private void OpenMinimap()
@@ -113,11 +138,28 @@ public sealed class IslandViewmodel : ViewmodelBase
         deps.Callback.OpenMinimap(this);
     }
 
+    private void DiscardChanges()
+    {
+        if (!mapEditor.IsValueCreated)
+        {
+            return;
+        }
+
+        var result = DialogManager.ShowMessageBox($"Discard changes to {IslandName3332}?", "Confirm Discard",
+            System.Windows.MessageBoxButton.OKCancel, System.Windows.MessageBoxImage.Warning);
+        if (result != System.Windows.MessageBoxResult.OK)
+        {
+            return;
+        }
+
+        mapEditor.Value.DiscardChanges();
+    }
+
     public void OnCmndatSaved()
     {
-        if (mapEditorVM.IsValueCreated)
+        if (mapEditor.IsValueCreated)
         {
-            mapEditorVM.Value.Item2.OnCmndatSaved();
+            mapEditor.Value.OnCmndatSaved();
         }
     }
 
@@ -166,6 +208,17 @@ public sealed class IslandViewmodel : ViewmodelBase
         {
             this.unmodifiedGrid = Array2D<MinimapTile>.CopyFrom(this);
             IslandVM.ChangedTileCount4506 = 0;
+        }
+
+        public void DiscardChanges()
+        {
+            this.CopyFrom(unmodifiedGrid);
+
+            if (IslandVM.ChangedTileCount4506 != 0)
+            {
+                IslandVM.ChangedTileCount4506 = 0;
+                Util.SoftAssertFail();
+            }
         }
     }
 }

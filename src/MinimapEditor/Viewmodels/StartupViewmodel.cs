@@ -187,6 +187,7 @@ public sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
 
         IslandChoices8930 = IslandViewmodel.Islands().Select(item => new IslandViewmodel(deps, item.Item2)
         {
+            DialogManager = this.DialogManager,
             IslandName3332 = item.Item1,
         }).ToList();
 

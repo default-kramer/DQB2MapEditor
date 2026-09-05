@@ -113,6 +113,27 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
+                            <GridViewColumn Header="">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <StackPanel.Style>
+                                                <Style TargetType="{x:Type StackPanel}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ChangedTileCount4506}" Value="0">
+                                                            <Setter Property="Visibility" Value="Hidden"></Setter>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                    <Setter Property="Visibility" Value="Visible"></Setter>
+                                                </Style>
+                                            </StackPanel.Style>
+                                            <TextBlock>
+                                                <Hyperlink Command="{Binding CommandDiscardChanges2227}">Discard Changes</Hyperlink>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>
