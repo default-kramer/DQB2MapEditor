@@ -9,8 +9,10 @@ public sealed class Test1
     [TestMethod]
     public async Task saving_resets_modified_tile_count()
     {
-        async Task doTest(bool closeTheTab, string snapshotName)
+        async Task doTest(bool closeTheTab)
         {
+            // Snapshot must be identical whether or not the tab is closed
+            const string snapshotName = "ff2cd865-0f7c-4f45-b867-6fffeb1cbbaf";
             var islandId = IslandId.IoA;
             var origTile = MinimapTile.FromRawValue(1);
             var newTile = MinimapTile.FromRawValue(2);
@@ -53,11 +55,8 @@ public sealed class Test1
             Assert.AreEqual(0, map.ChangedTileCount);
         }
 
-        // Snapshot must be identical whether or not the tab is closed
-        const string snapshotName = "ff2cd865-0f7c-4f45-b867-6fffeb1cbbaf";
-
         // Regression: the first fix for this bug didn't work if the tab had been closed.
-        await doTest(closeTheTab: false, snapshotName);
-        await doTest(closeTheTab: true, snapshotName);
+        await doTest(closeTheTab: false);
+        await doTest(closeTheTab: true);
     }
 }

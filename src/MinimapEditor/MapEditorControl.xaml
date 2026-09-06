@@ -8,161 +8,31 @@
              PreviewKeyDown="Window_PreviewKeyDown"
              PreviewKeyUp="Window_PreviewKeyUp"
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Style x:Key="FlowBox" TargetType="{x:Type Border}">
+            <Setter Property="Width" Value="200"></Setter>
+            <Setter Property="Margin" Value="8,10,0,0"></Setter>
+            <Setter Property="Padding" Value="5"></Setter>
+        </Style>
+        <Style x:Key="BlueFlowBox" BasedOn="{StaticResource FlowBox}" TargetType="{x:Type Border}">
+            <Setter Property="BorderThickness" Value="3"></Setter>
+            <Setter Property="Background" Value="#E8FEFF"></Setter>
+            <Setter Property="BorderBrush" Value="#E8FEFF"></Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding (local:Util.IsActive2987), RelativeSource={RelativeSource Self}}" Value="True">
+                    <Setter Property="Background" Value="#9EFBFF"></Setter>
+                    <Setter Property="BorderBrush" Value="#00DDFF"></Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"></ColumnDefinition>
-            <ColumnDefinition Width="200"></ColumnDefinition>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
             <ColumnDefinition></ColumnDefinition>
         </Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="0" Orientation="Vertical">
-            <StackPanel.Style>
-                <Style TargetType="{x:Type StackPanel}">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding Mode1336.IsSpecialMode8897}" Value="True">
-                            <Setter Property="Visibility" Value="Collapsed"></Setter>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </StackPanel.Style>
-            <Border Margin="10" Padding="4,10,4,10" BorderThickness="3">
-                <Border.Style>
-                    <Style TargetType="{x:Type Border}">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Mode1336.IsAnySelectMode4440}" Value="True">
-                                <Setter Property="Background" Value="#9EFBFF"></Setter>
-                                <Setter Property="BorderBrush" Value="#00DDFF"></Setter>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Mode1336.IsAnySelectMode4440}" Value="False">
-                                <Setter Property="Background" Value="#E8FEFF"></Setter>
-                                <Setter Property="BorderBrush" Value="#E8FEFF"></Setter>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-                <StackPanel Orientation="Vertical">
-                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsSelectMode5073}">SELECT</CheckBox>
-                    <TextBlock HorizontalAlignment="Center">(or hold key: 1)</TextBlock>
-                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsRectSelectMode2843}" Margin="0,7,0,0">RECT SELECT</CheckBox>
-                    <TextBlock HorizontalAlignment="Center">(or hold key: 2)</TextBlock>
-                    <TextBlock Text="Left mouse selects" Margin="0,10,0,0"></TextBlock>
-                    <TextBlock Text="Right mouse deselects"></TextBlock>
-                    <TextBlock Margin="0,15,0,0">
-                        <Run Text="{Binding SelectionGrid1346.SelectionCount9593}"></Run>
-                        <Run> tile(s) selected</Run>
-                    </TextBlock>
-                    <Button Margin="0,8,0,0" Command="{Binding CommandClearSelection9567}">Clear Selection</Button>
-                </StackPanel>
-            </Border>
-            <Border Margin="10" Padding="4,10,4,10" BorderThickness="3">
-                <Border.Style>
-                    <Style TargetType="{x:Type Border}">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Mode1336.IsModifyMode6812}" Value="True">
-                                <Setter Property="Background" Value="#9EFBFF"></Setter>
-                                <Setter Property="BorderBrush" Value="#00DDFF"></Setter>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Mode1336.IsModifyMode6812}" Value="False">
-                                <Setter Property="Background" Value="#E8FEFF"></Setter>
-                                <Setter Property="BorderBrush" Value="#E8FEFF"></Setter>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-                <StackPanel Orientation="Vertical">
-                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsModifyMode6812}">MODIFY</CheckBox>
-                    <TextBlock HorizontalAlignment="Center">(or hold key: 3)</TextBlock>
-
-                    <local:TileSpecControl DataContext="{Binding ModifyTileSpec5436}"></local:TileSpecControl>
-                    <Button Command="{Binding CommandApplyToSelection4785}" Margin="0,20,0,0">
-                        <TextBlock>
-                            <Run>Apply to </Run>
-                            <Run Text="{Binding SelectionGrid1346.SelectionCount9593}"></Run>
-                            <Run> selected tile(s)</Run>
-                        </TextBlock>
-                    </Button>
-                </StackPanel>
-            </Border>
-            <Border Margin="10" Padding="4,10,4,10" BorderThickness="3">
-                <Border.Style>
-                    <Style TargetType="{x:Type Border}">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Mode1336.IsPasteMode4735}" Value="True">
-                                <Setter Property="Background" Value="#9EFBFF"></Setter>
-                                <Setter Property="BorderBrush" Value="#00DDFF"></Setter>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Mode1336.IsPasteMode4735}" Value="False">
-                                <Setter Property="Background" Value="#E8FEFF"></Setter>
-                                <Setter Property="BorderBrush" Value="#E8FEFF"></Setter>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding ShowPasteError6146}" Value="True">
-                                <Setter Property="BorderBrush" Value="Red"></Setter>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-                <StackPanel Orientation="Vertical">
-                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsPasteMode4735}">PASTE</CheckBox>
-                    <TextBlock HorizontalAlignment="Center">(or hold key: 4)</TextBlock>
-                    <Grid Margin="0,3,0,0">
-                        <TextBlock Text="{Binding PasteMessageGood7320}" TextWrapping="Wrap" VerticalAlignment="Center">
-                            <TextBlock.Style>
-                                <Style TargetType="{x:Type TextBlock}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ShowPasteError6146}" Value="True">
-                                            <Setter Property="Visibility" Value="Collapsed"></Setter>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding ShowPasteError6146}" Value="False">
-                                            <Setter Property="Visibility" Value="Visible"></Setter>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        <TextBlock Text="Clipboard does not contain Minimap data!" Foreground="Red" TextWrapping="Wrap" VerticalAlignment="Center">
-                            <TextBlock.Style>
-                                <Style TargetType="{x:Type TextBlock}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ShowPasteError6146}" Value="True">
-                                            <Setter Property="Visibility" Value="Visible"></Setter>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding ShowPasteError6146}" Value="False">
-                                            <Setter Property="Visibility" Value="Hidden"></Setter>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Grid>
-                </StackPanel>
-            </Border>
-        </StackPanel>
-        <StackPanel Grid.Column="0" Orientation="Vertical">
-            <StackPanel.Style>
-                <Style TargetType="{x:Type StackPanel}">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding Mode1336.IsWriteTextMode2099}" Value="False">
-                            <Setter Property="Visibility" Value="Collapsed"></Setter>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </StackPanel.Style>
-            <Border Margin="10" Padding="4,10,4,10" BorderThickness="3" Background="#9EFBFF" BorderBrush="#00DDFF">
-                <StackPanel Orientation="Vertical">
-                    <TextBox Text="{Binding WriteText1898.Text1230, UpdateSourceTrigger=PropertyChanged}"
-                             Name="textToWrite" AcceptsReturn="True" MaxLines="99"></TextBox>
-                    <TextBlock Margin="0,10,0,0" TextWrapping="Wrap"
-                               Text="Left click on any tile to reposition the text"></TextBlock>
-                    <Button Margin="0,10,0,0" Command="{Binding CommandAcceptText9006}">Accept Text</Button>
-                    <Button Margin="0,6,0,0" Command="{Binding CommandDiscardText1025}">Discard Text</Button>
-                    <TextBlock Margin="0,12,0,0" Text="Letters:" HorizontalAlignment="Center" FontWeight="Bold" FontSize="16"></TextBlock>
-                    <local:TileSpecControl DataContext="{Binding WriteText1898.TileOn9672}"></local:TileSpecControl>
-                    <TextBlock Margin="0,12,0,0" Text="Background:" HorizontalAlignment="Center" FontWeight="Bold" FontSize="16"></TextBlock>
-                    <local:TileSpecControl DataContext="{Binding WriteText1898.TileOff1271}"></local:TileSpecControl>
-                </StackPanel>
-            </Border>
-        </StackPanel>
-        <StackPanel Grid.Column="1" Orientation="Vertical">
-            <Border Margin="10" Padding="4,10,4,10" Background="Beige">
+        <WrapPanel Grid.Column="0" Orientation="Vertical">
+            <Border Style="{StaticResource FlowBox}" Background="Beige">
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="HOVERING" HorizontalAlignment="Center"></TextBlock>
                     <TextBlock Margin="10">
@@ -184,8 +54,96 @@
                     <TextBlock FontSize="10" TextWrapping="Wrap" Text="{Binding FullHoverInfo1657}"></TextBlock>
                 </StackPanel>
             </Border>
-        </StackPanel>
-        <Grid Grid.Column="2">
+            <Border Style="{StaticResource BlueFlowBox}" local:Util.IsActive2987="{Binding Mode1336.IsAnySelectMode4440}" Visibility="{Binding Mode1336.VisibilityStandard5734}">
+                <StackPanel Orientation="Vertical">
+                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsSelectMode5073}">SELECT</CheckBox>
+                    <TextBlock HorizontalAlignment="Center">(or hold key: 1)</TextBlock>
+                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsRectSelectMode2843}" Margin="0,7,0,0">RECT SELECT</CheckBox>
+                    <TextBlock HorizontalAlignment="Center">(or hold key: 2)</TextBlock>
+                    <TextBlock Text="Left mouse selects" Margin="0,10,0,0"></TextBlock>
+                    <TextBlock Text="Right mouse deselects"></TextBlock>
+                    <TextBlock Margin="0,15,0,0">
+                        <Run Text="{Binding SelectionGrid1346.SelectionCount9593}"></Run>
+                        <Run> tile(s) selected</Run>
+                    </TextBlock>
+                    <Button Margin="0,8,0,0" Command="{Binding CommandClearSelection9567}">Clear Selection</Button>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource BlueFlowBox}" local:Util.IsActive2987="{Binding Mode1336.IsPasteMode4735}" Visibility="{Binding Mode1336.VisibilityStandard5734}">
+                <StackPanel Orientation="Vertical">
+                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsPasteMode4735}">PASTE</CheckBox>
+                    <TextBlock HorizontalAlignment="Center">(or hold key: 4)</TextBlock>
+                    <Grid Margin="0,3,0,0">
+                        <TextBlock Text="{Binding PasteMessageGood7320}" TextWrapping="Wrap" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="{x:Type TextBlock}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShowPasteError6146}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ShowPasteError6146}" Value="False">
+                                            <Setter Property="Visibility" Value="Visible"></Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="Clipboard does not contain Minimap data!" Foreground="Red" TextWrapping="Wrap" VerticalAlignment="Center"
+                                   Background="White" Padding="3" FontWeight="Bold">
+                            <TextBlock.Style>
+                                <Style TargetType="{x:Type TextBlock}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShowPasteError6146}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"></Setter>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ShowPasteError6146}" Value="False">
+                                            <Setter Property="Visibility" Value="Hidden"></Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource BlueFlowBox}" local:Util.IsActive2987="{Binding Mode1336.IsModifyMode6812}" Visibility="{Binding Mode1336.VisibilityStandard5734}">
+                <StackPanel Orientation="Vertical">
+                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Mode1336.IsModifyMode6812}">MODIFY</CheckBox>
+                    <TextBlock HorizontalAlignment="Center">(or hold key: 3)</TextBlock>
+                    <local:TileSpecControl DataContext="{Binding ModifyTileSpec5436}"></local:TileSpecControl>
+                    <Button Command="{Binding CommandApplyToSelection4785}" Margin="0,20,0,0">
+                        <TextBlock>
+                            <Run>Apply to </Run>
+                            <Run Text="{Binding SelectionGrid1346.SelectionCount9593}"></Run>
+                            <Run> selected tile(s)</Run>
+                        </TextBlock>
+                    </Button>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource BlueFlowBox}" local:Util.IsActive2987="{Binding Mode1336.IsWriteTextMode2099}" Visibility="{Binding Mode1336.VisibilityWriteText3657}">
+                <StackPanel Orientation="Vertical">
+                    <TextBox Text="{Binding WriteText1898.Text1230, UpdateSourceTrigger=PropertyChanged}"
+                             Name="textToWrite" AcceptsReturn="True" MaxLines="99"></TextBox>
+                    <TextBlock Margin="0,10,0,0" TextWrapping="Wrap"
+                               Text="Left click on any tile to reposition the text"></TextBlock>
+                    <Button Margin="0,10,0,0" Command="{Binding CommandAcceptText9006}">Accept Text</Button>
+                    <Button Margin="0,6,0,0" Command="{Binding CommandDiscardText1025}">Discard Text</Button>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource BlueFlowBox}" local:Util.IsActive2987="{Binding Mode1336.IsWriteTextMode2099}" Visibility="{Binding Mode1336.VisibilityWriteText3657}">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="Letters:" HorizontalAlignment="Center" FontWeight="Bold" FontSize="16"></TextBlock>
+                    <local:TileSpecControl DataContext="{Binding WriteText1898.TileOn9672}"></local:TileSpecControl>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource BlueFlowBox}" local:Util.IsActive2987="{Binding Mode1336.IsWriteTextMode2099}" Visibility="{Binding Mode1336.VisibilityWriteText3657}">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="Background:" HorizontalAlignment="Center" FontWeight="Bold" FontSize="16"></TextBlock>
+                    <local:TileSpecControl DataContext="{Binding WriteText1898.TileOff1271}"></local:TileSpecControl>
+                </StackPanel>
+            </Border>
+        </WrapPanel>
+        <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition></RowDefinition>
             </Grid.RowDefinitions>

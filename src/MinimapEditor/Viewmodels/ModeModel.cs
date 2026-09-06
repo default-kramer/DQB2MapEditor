@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows;
 
 namespace MinimapEditor.Viewmodels;
 
@@ -69,4 +70,7 @@ public sealed class ModeModel : ViewmodelBase
     public bool IsAnySelectMode4440 => IsSelectMode5073 || IsRectSelectMode2843;
 
     public bool IsSpecialMode8897 => IsWriteTextMode2099;
+
+    public Visibility VisibilityStandard5734 => IsSpecialMode8897 ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility VisibilityWriteText3657 => IsWriteTextMode2099 ? Visibility.Visible : Visibility.Collapsed;
 }
