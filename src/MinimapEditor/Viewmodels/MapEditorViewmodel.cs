@@ -657,6 +657,11 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
         Mode1336.IsWriteTextMode2099 = false;
     }
 
+    internal void OnChangesDiscarded()
+    {
+        Mode1336.IsPanMode8931 = true;
+    }
+
     sealed class PasteManager
     {
         /// <summary>

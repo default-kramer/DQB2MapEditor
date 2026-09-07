@@ -85,6 +85,7 @@ public sealed class IslandViewmodel : ViewmodelBase
         {
             countChangedTiles.DiscardChanges();
             wpfMinimapGrid.RefreshAll();
+            VM.OnChangesDiscarded();
         }
 
         public void OnCmndatSaved()

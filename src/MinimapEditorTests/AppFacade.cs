@@ -62,7 +62,10 @@ sealed class AppFacade
         var islandVM = startupVM.IslandChoices8930.Single(i => i.IslandId2242 == islandId);
         Assert.IsTrue(islandVM.CommandOpenMinimap5775.CanExecute(null));
         islandVM.CommandOpenMinimap5775.Execute(null);
-        return new IslandFacade(islandVM, startupVM);
+        return new IslandFacade(islandVM, startupVM)
+        {
+            FakeDialogManager = this.fakeDialogManager
+        };
     }
 
     public sealed record SaveResult
@@ -81,8 +84,6 @@ sealed class AppFacade
                 throw new ArgumentException(nameof(islandIds));
             }
 
-            var snapshotDir = Util.FindSnapshotDir();
-
             using var stream = new MemoryStream();
             foreach (var islandId in islandIds)
             {
@@ -93,23 +94,7 @@ sealed class AppFacade
             var actualBytes = stream.GetBuffer().AsSpan().Slice(0, (int)stream.Position);
             Assert.AreEqual(actualBytes.Length, stream.Position);
 
-            var expectPath = Path.Combine(snapshotDir.FullName, $"{snapshotName}.expected.bin");
-            var actualPath = Path.Combine(snapshotDir.FullName, $"{snapshotName}.actual.bin");
-
-            if (File.Exists(expectPath))
-            {
-                var expectBytes = File.ReadAllBytes(expectPath);
-                if (!expectBytes.SequenceEqual(actualBytes))
-                {
-                    File.WriteAllBytes(actualPath, actualBytes);
-                    Assert.Fail($"Snapshots differ, see {actualPath}");
-                }
-            }
-            else
-            {
-                File.WriteAllBytes(expectPath, actualBytes);
-                Assert.Inconclusive($"New snapshot created: {expectPath}");
-            }
+            Util.DoSnapshotTest(snapshotName, actualBytes);
         }
     }
 }

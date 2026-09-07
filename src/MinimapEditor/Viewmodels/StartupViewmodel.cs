@@ -164,7 +164,11 @@ public sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
         RawCommonData cmndat;
         try
         {
-            cmndat = await FileFactory.LoadCommonDataAsync(new FileInfo(fullPath));
+            var options = new LibDQB.B2.Records.FileDataReadOptions
+            {
+                FileShare = FileShare.Read,
+            };
+            cmndat = await FileFactory.LoadCommonDataAsync(new FileInfo(fullPath), options);
         }
         catch (Exception ex)
         {

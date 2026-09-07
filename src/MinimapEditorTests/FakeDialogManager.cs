@@ -36,4 +36,9 @@ class FakeDialogManager : DialogManager
         Assert.AreEqual(caption, current.AssertCaption ?? caption);
         return current.Result;
     }
+
+    public override void ShowError(string message, string caption = "Error")
+    {
+        throw new Exception($"Unexpected error: {caption} / {message}");
+    }
 }

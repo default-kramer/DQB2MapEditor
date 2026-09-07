@@ -8,6 +8,7 @@ sealed record IslandFacade
 {
     private readonly IslandViewmodel islandVM;
     private readonly StartupViewmodel startupVM;
+    public required FakeDialogManager FakeDialogManager { get; init; }
 
     public IslandFacade(IslandViewmodel islandVM, StartupViewmodel startupVM)
     {
@@ -15,14 +16,30 @@ sealed record IslandFacade
         this.startupVM = startupVM;
     }
 
-    private (MapEditorViewmodel MapVM, StartupViewmodel.TabItemViewmodel TabVM) EnsureOpened()
+    public bool IsTabOpened() => IsTabOpened(out _, out _);
+
+    private bool IsTabOpened(out MapEditorViewmodel mapVM, out StartupViewmodel.TabItemViewmodel tabVM)
     {
         foreach (var tab in startupVM.Tabs4685)
         {
-            if (tab.HoldsMapEditor(out var mapVM) && mapVM.IslandId == islandVM.IslandId2242)
+            if (tab.HoldsMapEditor(out var map) && map.IslandId == islandVM.IslandId2242)
             {
-                return (mapVM, tab);
+                mapVM = map;
+                tabVM = tab;
+                return true;
             }
+        }
+
+        mapVM = null!;
+        tabVM = null!;
+        return false;
+    }
+
+    private (MapEditorViewmodel MapVM, StartupViewmodel.TabItemViewmodel TabVM) EnsureOpened()
+    {
+        if (IsTabOpened(out var mapVM, out var tabVM))
+        {
+            return (mapVM, tabVM);
         }
         throw new Exception($"Tab is not open: {islandVM.IslandId2242}");
     }
@@ -62,5 +79,39 @@ sealed record IslandFacade
         Assert.IsNotNull(tabVM.CommandCloseTab2176);
         Assert.IsTrue(tabVM.CommandCloseTab2176.CanExecute(null));
         tabVM.CommandCloseTab2176.Execute(null);
+    }
+
+    public void EnterWriteTextMode(XZ initialPosition)
+    {
+        var (mapVM, _) = EnsureOpened();
+        mapVM.EnterWriteTextMode(initialPosition, out _);
+        Assert.IsGreaterThan(1, mapVM.WriteText1898.Text1230.Length);
+    }
+
+    public void DiscardChanges()
+    {
+        Assert.IsTrue(islandVM.CommandDiscardChanges2227.CanExecute(null));
+        FakeDialogManager.nextMessageBoxResult = new MessageBoxInterception()
+        {
+            AssertCaption = "Confirm Discard",
+            Result = System.Windows.MessageBoxResult.OK,
+        };
+        islandVM.CommandDiscardChanges2227.Execute(null);
+    }
+
+    public void DoSnapshotTest(string snapshotName)
+    {
+        var (mapVM, _) = EnsureOpened();
+        Util.DoSnapshotTest(snapshotName, mapVM.Grid());
+    }
+
+    /// <summary>
+    /// Clone so that setting properties won't do anything
+    /// (modification requests must come through the facade)
+    /// </summary>
+    public ModeModel CloneCurrentMode()
+    {
+        var (mapVM, _) = EnsureOpened();
+        return mapVM.Mode1336.Clone();
     }
 }

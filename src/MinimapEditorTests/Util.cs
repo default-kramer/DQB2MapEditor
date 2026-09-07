@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using LibDQB;
+using LibDQB.DQB2Minimap;
 
 namespace MinimapEditorTests;
 
@@ -47,5 +46,46 @@ static class Util
     public static DirectoryInfo FindSnapshotDir()
     {
         return FindTestProjectDir().GetDirectories("Snapshots").Single();
+    }
+
+    public static void DoSnapshotTest(string snapshotName, IReadOnlyGrid<MinimapTile> map)
+    {
+        int size = map.Bounds.Size.X * map.Bounds.Size.Z * 2;
+        var buffer = new byte[size];
+        var stream = new MemoryStream(buffer);
+        foreach (var xz in map.Bounds.Enumerate())
+        {
+            var value = map.Get(xz).TileValue;
+            byte lo = (byte)(value & 0xFF);
+            byte hi = (byte)((value >> 8) & 0xFF);
+            stream.WriteByte(lo);
+            stream.WriteByte(hi);
+        }
+
+        Assert.AreEqual(size, stream.Position);
+        DoSnapshotTest(snapshotName, buffer.AsSpan());
+    }
+
+    public static void DoSnapshotTest(string snapshotName, ReadOnlySpan<byte> actualBytes)
+    {
+        var snapshotDir = FindSnapshotDir();
+
+        var expectPath = Path.Combine(snapshotDir.FullName, $"{snapshotName}.expected.bin");
+        var actualPath = Path.Combine(snapshotDir.FullName, $"{snapshotName}.actual.bin");
+
+        if (File.Exists(expectPath))
+        {
+            var expectBytes = File.ReadAllBytes(expectPath);
+            if (!expectBytes.SequenceEqual(actualBytes))
+            {
+                File.WriteAllBytes(actualPath, actualBytes);
+                Assert.Fail($"Snapshots differ, see {actualPath}");
+            }
+        }
+        else
+        {
+            File.WriteAllBytes(expectPath, actualBytes);
+            Assert.Inconclusive($"New snapshot created: {expectPath}");
+        }
     }
 }

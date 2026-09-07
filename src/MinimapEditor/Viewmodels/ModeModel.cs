@@ -7,6 +7,13 @@ namespace MinimapEditor.Viewmodels;
 
 public sealed class ModeModel : ViewmodelBase
 {
+    public ModeModel Clone()
+    {
+        var clone = new ModeModel();
+        clone._mode = this._mode;
+        return clone;
+    }
+
     enum Mode
     {
         Pan,

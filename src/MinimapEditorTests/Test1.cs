@@ -1,4 +1,5 @@
-﻿using LibDQB.B2.Records;
+﻿using LibDQB;
+using LibDQB.B2.Records;
 using LibDQB.DQB2Minimap;
 
 namespace MinimapEditorTests;
@@ -58,5 +59,28 @@ public sealed class Test1
         // Regression: the first fix for this bug didn't work if the tab had been closed.
         await doTest(closeTheTab: false);
         await doTest(closeTheTab: true);
+    }
+
+    [TestMethod]
+    public void discard_changes_exits_write_text_mode()
+    {
+        // Regression: Using "Discard Changes" from the CMNDAT tab while in Write Text
+        // mode left it in Write Text mode but with no text anywhere (because it was discarded).
+        // Reset mode after changes are discarded.
+        var islandId = IslandId.IoA;
+
+        var app = AppFacade.Create();
+        app.LoadCmndat("01_CMNDAT.BIN");
+        var map = app.OpenMapEditor(islandId);
+        Assert.AreEqual(0, map.ChangedTileCount);
+
+        map.EnterWriteTextMode(new XZ(3, 3));
+        Assert.AreEqual(493, map.ChangedTileCount);
+        Assert.IsTrue(map.CloneCurrentMode().IsWriteTextMode2099);
+        map.DoSnapshotTest("48ff283c-ab7b-4d8d-8421-026a4395f184");
+
+        map.DiscardChanges();
+        Assert.AreEqual(0, map.ChangedTileCount);
+        Assert.IsTrue(map.CloneCurrentMode().IsPanMode8931);
     }
 }
