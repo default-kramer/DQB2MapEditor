@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace MinimapEditor.Viewmodels;
 
@@ -15,6 +16,12 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
         IEnumerable<ImageSource> AllLayers();
     }
 
+    public interface IImageExporter
+    {
+        BitmapFrame ExportFullImage();
+        BitmapFrame ExportCroppedImage(IReadOnlyGrid<MinimapTile> map);
+    }
+
     private readonly IGrid<MinimapTile> grid;
     private readonly PasteManager pasteManager;
     private readonly TextManager textManager;
@@ -23,6 +30,8 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
 
     public required IslandId IslandId { get; init; }
     public required IRepainter BitmapLayers { get; init; }
+    public required IImageExporter ImageExporter { get; init; }
+    public required DialogManager DialogManager { get; init; }
 
     public MapEditorViewmodel(IGrid<MinimapTile> grid, IGrid<bool> selectionGrid, DataDefinitions definitions)
     {
@@ -60,6 +69,7 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
         CommandInvertSelection4977 = new RelayCommand(_ => true, _ => InvertSelection());
         CommandAcceptText9006 = new RelayCommand(_ => true, _ => AcceptText());
         CommandDiscardText1025 = new RelayCommand(_ => true, _ => DiscardText());
+        CommandExportImage5190 = new RelayCommand(_ => true, _ => ExportImage());
 
         ResetZoom();
 
@@ -108,6 +118,7 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
     public ICommand CommandInvertSelection4977 { get; }
     public ICommand CommandAcceptText9006 { get; }
     public ICommand CommandDiscardText1025 { get; }
+    public ICommand CommandExportImage5190 { get; }
 
     public SelectionGridModel SelectionGrid1346 { get; }
     private readonly ModeModel _mode = new();
@@ -540,6 +551,37 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
         MessageBox.Show("Play DQB2 normally and the tiles will refresh when the Builder gets near enough. Door overlays may take longer to update.", $"{changeCount} tiles reset.");
     }
 
+    private void ExportImage()
+    {
+        var currentZoom = ConvertCurrentZoom(this, grid.Bounds);
+        var vm = new ExportImageViewmodel(ImageExporter, grid, currentZoom)
+        {
+            DialogManager = this.DialogManager,
+        };
+        DialogManager.ShowDialog(vm);
+    }
+
+    private static LibDQB.Rect ConvertCurrentZoom(ZoomAndPanControl.IZoomMemory zm, LibDQB.Rect bounds)
+    {
+        var rectNullable = zm.CurrentZoom;
+        if (!rectNullable.HasValue)
+        {
+            return bounds;
+        }
+        var rect = rectNullable.Value;
+
+        var x0 = bounds.Start.X + bounds.Size.X * rect.Left;
+        var z0 = bounds.Start.Z + bounds.Size.Z * rect.Top;
+        var x1 = bounds.Start.X + bounds.Size.X * rect.Right;
+        var z1 = bounds.Start.Z + bounds.Size.Z * rect.Bottom;
+
+        var start = new XZ(Convert.ToInt32(Math.Floor(x0)), Convert.ToInt32(Math.Floor(z0)));
+        var end = new XZ(Convert.ToInt32(Math.Ceiling(x1)), Convert.ToInt32(Math.Ceiling(z1)));
+
+        // make sure we're not bigger than the full bounds (avoid rounding errors)
+        return bounds.Intersection(new LibDQB.Rect(start, end));
+    }
+
     private void InvertSelection()
     {
         foreach (var xz in SelectionGrid1346.Bounds.Enumerate())
@@ -550,13 +592,11 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
 
     private static System.Windows.Rect? GetInitialZoom(IReadOnlyGrid<MinimapTile> grid)
     {
-        var xzs = grid.Bounds.Enumerate().Where(xz => grid.Get(xz).IsVisible).ToList();
-        if (xzs.Count == 0)
+        var rect = CropToVisibleTiles(grid);
+        if (rect == null)
         {
             return null;
         }
-
-        var rect = LibDQB.Rect.GetBounds(xzs);
         double x0 = (0.0 + rect.Start.X) / grid.Bounds.Size.X;
         double x1 = (0.0 + rect.End.X) / grid.Bounds.Size.X;
         double y0 = (0.0 + rect.Start.Z) / grid.Bounds.Size.Z;
@@ -569,6 +609,12 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
         x0 = Math.Clamp(x0 + dx, 0, 1.0 - size);
         y0 = Math.Clamp(y0 + dy, 0, 1.0 - size);
         return new System.Windows.Rect(x0, y0, size, size);
+    }
+
+    internal static LibDQB.Rect? CropToVisibleTiles(IReadOnlyGrid<MinimapTile> grid)
+    {
+        var xzs = grid.Bounds.Enumerate().Where(xz => grid.Get(xz).IsVisible);
+        return LibDQB.Rect.GetBoundsOrNull(xzs);
     }
 
     public void CopySelectionToClipboard()

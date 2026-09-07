@@ -16,7 +16,10 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        startupVM = new();
+        startupVM = new()
+        {
+            DialogManager = new DialogManager(this),
+        };
         DataContext = startupVM;
     }
 

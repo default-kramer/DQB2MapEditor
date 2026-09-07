@@ -1,10 +1,8 @@
 ﻿using LibDQB;
 using LibDQB.DQB2Minimap;
 using MinimapEditor.Viewmodels;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace MinimapEditor;
 
@@ -15,7 +13,8 @@ namespace MinimapEditor;
 sealed class BitmapRepainter<TLayer> : MapEditorViewmodel.IRepainter
     , WpfMinimapGrid.IRepainter
     , SelectionGridDecorator.IRepainter
-    where TLayer : ImageSource
+    , MapEditorViewmodel.IImageExporter
+    where TLayer : BitmapSource
 {
     public interface ITilesheet
     {
@@ -70,5 +69,47 @@ sealed class BitmapRepainter<TLayer> : MapEditorViewmodel.IRepainter
     void SelectionGridDecorator.IRepainter.Repaint(IReadOnlyGrid<bool> selectionGrid, Rect dirty)
     {
         tilesheet.UpdateSelectionLayer(layerSelectionA, layerSelectionB, selectionGrid, dirty);
+    }
+
+    BitmapFrame MapEditorViewmodel.IImageExporter.ExportFullImage()
+    {
+        return Composite(layerBase, layerOverlay, layerVisibility);
+    }
+
+    BitmapFrame MapEditorViewmodel.IImageExporter.ExportCroppedImage(IReadOnlyGrid<MinimapTile> grid)
+    {
+        grid = grid.TranslateTo(new XZ(0, 0));
+        int width = grid.Bounds.Size.X;
+        int height = grid.Bounds.Size.Z;
+
+        var layerBase = tilesheet.CreateLayer(width, height);
+        tilesheet.UpdateBaseTileLayer(layerBase, grid, grid.Bounds);
+
+        var layerOverlay = tilesheet.CreateLayer(width, height);
+        tilesheet.UpdateOverlayLayer(layerOverlay, grid, grid.Bounds);
+
+        var layerVisibility = tilesheet.CreateLayer(width, height);
+        tilesheet.UpdateVisibilityLayer(layerVisibility, grid, grid.Bounds);
+
+        return Composite(layerBase, layerOverlay, layerVisibility);
+    }
+
+    private static BitmapFrame Composite(params TLayer[] layers)
+    {
+        int width = layers[0].PixelWidth;
+        int height = layers[0].PixelHeight;
+
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen())
+        {
+            foreach (var bitmap in layers)
+            {
+                dc.DrawImage(bitmap, new System.Windows.Rect(0, 0, width, height));
+            }
+        }
+
+        var composite = new RenderTargetBitmap(width, height, layers[0].DpiX, layers[0].DpiY, PixelFormats.Pbgra32);
+        composite.Render(visual);
+        return BitmapFrame.Create(composite);
     }
 }

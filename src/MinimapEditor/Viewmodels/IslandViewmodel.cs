@@ -129,6 +129,8 @@ public sealed class IslandViewmodel : ViewmodelBase
         {
             IslandId = islandId,
             BitmapLayers = repainter,
+            ImageExporter = repainter,
+            DialogManager = DialogManager,
         };
         return new MapEditor(viewmodel, changeCountingGrid, tileDecorator);
     }

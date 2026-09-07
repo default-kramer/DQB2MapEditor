@@ -176,6 +176,7 @@
                                 <MenuItem Header="selected tiles" Command="{Binding CommandFixShorelinesSelectedTiles3733}"></MenuItem>
                             </MenuItem>
                         </MenuItem>
+                        <MenuItem Header="Export Image..." Command="{Binding CommandExportImage5190}"></MenuItem>
                     </ContextMenu>
                 </Grid.ContextMenu>
                 <local:ZoomAndPanControl Grid.Row="1" x:Name="Zoomer" PreviewMouseDown="Zoomer_PreviewMouseDown" PreviewMouseUp="Zoomer_PreviewMouseUp" MouseEnter="Zoomer_MouseEnter">

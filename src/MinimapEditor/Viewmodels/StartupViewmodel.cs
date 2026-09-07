@@ -1,13 +1,10 @@
 ﻿using LibDQB.B2;
 using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Numerics;
-using System.Text;
 using System.Windows;
 using System.Windows.Input;
 
@@ -15,7 +12,7 @@ namespace MinimapEditor.Viewmodels;
 
 public sealed class StartupViewmodel : ViewmodelBase, IslandViewmodel.ICallback
 {
-    public DialogManager DialogManager { get; init; } = new();
+    public required DialogManager DialogManager { get; init; }
 
     public StartupViewmodel()
     {
