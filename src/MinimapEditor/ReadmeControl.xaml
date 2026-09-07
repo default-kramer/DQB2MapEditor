@@ -4,11 +4,66 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:MinimapEditor"
-             mc:Ignorable="d"
+             mc:Ignorable="d" Background="Beige"
              d:DesignHeight="450" d:DesignWidth="800">
-    <RichTextBox IsReadOnly="True">
-        <FlowDocument>
-            <Paragraph>TODO - Explain how to use the app, the "Elevated" tiles, credits, more...?</Paragraph>
-        </FlowDocument>
-    </RichTextBox>
+    <UserControl.Resources>
+        <Style x:Key="paraHeader" TargetType="{x:Type Paragraph}">
+            <Setter Property="FontSize" Value="16"></Setter>
+            <Setter Property="FontWeight" Value="Bold"></Setter>
+            <Setter Property="Margin" Value="0,16,0,0"></Setter>
+        </Style>
+    </UserControl.Resources>
+    <ScrollViewer MaxWidth="700" Margin="15" HorizontalAlignment="Left" VerticalScrollBarVisibility="Auto">
+        <RichTextBox IsReadOnly="True" Padding="5">
+            <FlowDocument LineHeight="7">
+                <Paragraph Style="{StaticResource paraHeader}">About</Paragraph>
+                <Paragraph>Unofficial Map Editor for Dragon Quest Builders 2.</Paragraph>
+                <Paragraph>
+                    Massive credit to Sapphire for figuring out the minimap and tilesheet,
+                    and for creating the original Minimap Exporter program which was a very useful reference.
+                </Paragraph>
+                <Paragraph>Thanks also to playinful for discovering the biome grid, and everyone else who has worked on save file editing for DQB2.</Paragraph>
+
+                <Paragraph Style="{StaticResource paraHeader}">Save Slots</Paragraph>
+                <Paragraph>
+                    The Steam version of DQB2 stores save data in an "SD" directory which is
+                    typically something like C:\Users\::you::\Documents\My Games\DRAGON QUEST BUILDERS II\Steam\76561198073553084\SD.
+                </Paragraph>
+                <Paragraph>The subdirectories B00, B01, and B02 correspond to save slots 1, 2, and 3 respectively. For example, SD/B02 is save slot 3.</Paragraph>
+                <Paragraph>
+                    <Run FontWeight="Bold">It is recommended to back up the directory/slot before editing it!</Run>
+                    I do this by creating a copy of the entire directory.
+                </Paragraph>
+                <Paragraph>
+                    Minimap data is stored in CMNDAT.BIN (or AUTOCMNDAT.BIN for the autosave slot).
+                    This app will prompt you to open the CMNDAT file of the save slot you want to edit.
+                    No changes you make in this app will be visible to DQB2 until you save the file.
+                    It is recommended that Steam be running while you use this app, otherwise the Steam Autocloud
+                    might replace your modified CMNDAT file with its version from the cloud when it starts up.
+                </Paragraph>
+                <Paragraph>
+                    Note that you can save to any location you want, but your changes will only be visible
+                    to DQB2 if you save to one of these save slots.
+                </Paragraph>
+
+                <Paragraph Style="{StaticResource paraHeader}">Minimap Tiles</Paragraph>
+                <Paragraph>
+                    Each tile on the minimap has 3 properties: the Base Tile, the Overlay, and the Visibility.
+                    The Base Tile corresponds to the type of terrain, such as grass or sea.
+                    The Overlay is used for things like trees, hills, and doors.
+                    Visibility is simply whether or not the tile has been revealed yet.
+                    These 3 properties form 3 layers of the combined image.
+                </Paragraph>
+                <Paragraph>
+                    When this app allows you to modify tiles, it usually allows you to choose whether
+                    each individual layer should be modified or left unchanged.
+                    Be aware that if all 3 layers are set to "leave unchanged" nothing will happen.
+                </Paragraph>
+
+                <Paragraph Style="{StaticResource paraHeader}">TODO</Paragraph>
+                <Paragraph>Need to figure out how the Biome Grid affects the minimap.</Paragraph>
+                <Paragraph>Maybe explain "high elevation" tiles?</Paragraph>
+            </FlowDocument>
+        </RichTextBox>
+    </ScrollViewer>
 </UserControl>
