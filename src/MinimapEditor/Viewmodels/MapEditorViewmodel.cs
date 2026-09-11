@@ -254,11 +254,11 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
             {
                 if (e.LeftButton == MouseButtonState.Pressed)
                 {
-                    SelectionGrid1346.Set(mouseXZ, true);
+                    SelectionGrid1346.SetAndImmediatelyNotify(mouseXZ, true);
                 }
                 else if (e.RightButton == MouseButtonState.Pressed)
                 {
-                    SelectionGrid1346.Set(mouseXZ, false);
+                    SelectionGrid1346.SetAndImmediatelyNotify(mouseXZ, false);
                 }
             }
         }
@@ -321,6 +321,8 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
             return;
         }
 
+        using var selector = SelectionGrid1346.DeferPropertyChanged();
+
         var (startXZ, isSelecting) = selectionRectDragStart.Value;
         var newRect = LibDQB.Rect.GetBounds([startXZ, newXZ]);
         var fullRect = LibDQB.Rect.GetBounds([startXZ, newXZ, prevXZ]);
@@ -328,12 +330,12 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
         {
             if (newRect.Contains(xz))
             {
-                SelectionGrid1346.Set(xz, isSelecting);
+                selector.Set(xz, isSelecting);
             }
             else
             {
                 // Selection Rect has shrunk, revert to whatever was there before
-                SelectionGrid1346.Set(xz, selectionRectOrigState.Get(xz));
+                selector.Set(xz, selectionRectOrigState.Get(xz));
             }
         }
     }
@@ -396,11 +398,11 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
             {
                 if (isLeftMouseDown)
                 {
-                    SelectionGrid1346.Set(xz, true);
+                    SelectionGrid1346.SetAndImmediatelyNotify(xz, true);
                 }
                 else if (isRightMouseDown)
                 {
-                    SelectionGrid1346.Set(xz, false);
+                    SelectionGrid1346.SetAndImmediatelyNotify(xz, false);
                 }
             }
         }
@@ -454,22 +456,24 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
 
     private void SelectElevatedTiles()
     {
+        using var selector = SelectionGrid1346.DeferPropertyChanged();
         foreach (var xz in grid.Bounds.Enumerate())
         {
             if (grid.Get(xz).IsQuirky)
             {
-                SelectionGrid1346.Set(xz, true);
+                selector.Set(xz, true);
             }
         }
     }
 
     private void SelectIllegalTiles()
     {
+        using var selector = SelectionGrid1346.DeferPropertyChanged();
         foreach (var xz in grid.Bounds.Enumerate())
         {
             if (!grid.Get(xz).BaseTileId.IsLegal)
             {
-                SelectionGrid1346.Set(xz, true);
+                selector.Set(xz, true);
             }
         }
     }
@@ -492,11 +496,12 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
 
     private void SelectIncorrectShorelines()
     {
+        using var selector = SelectionGrid1346.DeferPropertyChanged();
         foreach (var xz in grid.Bounds.Enumerate())
         {
             if (IsShorelineIncorrect(xz, out _))
             {
-                SelectionGrid1346.Set(xz, true);
+                selector.Set(xz, true);
             }
         }
     }
@@ -584,9 +589,10 @@ public sealed class MapEditorViewmodel : ViewmodelBase, ZoomAndPanControl.IZoomM
 
     private void InvertSelection()
     {
+        using var selector = SelectionGrid1346.DeferPropertyChanged();
         foreach (var xz in SelectionGrid1346.Bounds.Enumerate())
         {
-            SelectionGrid1346.Set(xz, !SelectionGrid1346.Get(xz));
+            selector.Set(xz, !SelectionGrid1346.Get(xz));
         }
     }
 

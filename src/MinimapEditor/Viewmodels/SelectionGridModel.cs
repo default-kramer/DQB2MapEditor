@@ -1,12 +1,8 @@
 ﻿using LibDQB;
-using LibDQB.B2;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace MinimapEditor.Viewmodels;
 
-public sealed class SelectionGridModel : ViewmodelBase, IGrid<bool>
+public sealed class SelectionGridModel : ViewmodelBase, IReadOnlyGrid<bool>
 {
     private readonly IGrid<bool> selectionGrid;
 
@@ -28,11 +24,22 @@ public sealed class SelectionGridModel : ViewmodelBase, IGrid<bool>
         countsPerSector = new Array2D<int>(scaledBounds, 0);
     }
 
-    public void Set(XZ xz, bool value)
+    public void SetAndImmediatelyNotify(XZ xz, bool value)
+    {
+        SelectionCount9593 = __Set(xz, value);
+    }
+
+    private void SetDeferred(XZ xz, bool value, PropertyChangeDeferral deferral)
+    {
+        // Set the field directly; the deferral will notify
+        _selectionCount = __Set(xz, value);
+    }
+
+    private int __Set(XZ xz, bool value)
     {
         if (value == selectionGrid.Get(xz))
         {
-            return;
+            return _selectionCount;
         }
 
         selectionGrid.Set(xz, value);
@@ -40,7 +47,7 @@ public sealed class SelectionGridModel : ViewmodelBase, IGrid<bool>
         int delta = value ? 1 : -1;
         var smallXZ = xz.Unscale(scale);
         countsPerSector[smallXZ] += delta;
-        SelectionCount9593 += delta;
+        return _selectionCount + delta;
     }
 
     public IEnumerable<XZ> Selection()
@@ -75,9 +82,56 @@ public sealed class SelectionGridModel : ViewmodelBase, IGrid<bool>
 
     public void ClearSelection()
     {
+        using var selector = DeferPropertyChanged();
         foreach (var xz in Selection())
         {
-            Set(xz, false);
+            selector.Set(xz, false);
+        }
+    }
+
+    public readonly ref struct PropertyChangeDeferral : IDisposable
+    {
+        private readonly SelectionGridModel parent;
+        public readonly int OriginalSelectionCount;
+
+        public PropertyChangeDeferral(SelectionGridModel parent)
+        {
+            this.parent = parent;
+            this.OriginalSelectionCount = parent.SelectionCount9593;
+        }
+
+        public void Set(XZ xz, bool value) => parent.SetDeferred(xz, value, this);
+
+        public void Dispose() => parent.Notify(this);
+    }
+
+    private bool isDeferring = false;
+
+    /// <summary>
+    /// Provides a big speedup when making mass edits (such as Invert Selection)
+    /// by delaying the PropertyChanged notification until finished.
+    /// </summary>
+    public PropertyChangeDeferral DeferPropertyChanged()
+    {
+        if (isDeferring)
+        {
+            throw new InvalidOperationException("Nested deferral is not supported");
+        }
+        isDeferring = true;
+        return new PropertyChangeDeferral(this);
+    }
+
+    private void Notify(PropertyChangeDeferral defer)
+    {
+        if (!isDeferring)
+        {
+            throw new InvalidOperationException("Assert fail - was the deferral disposed twice?");
+        }
+
+        isDeferring = false;
+        if (_selectionCount != defer.OriginalSelectionCount)
+        {
+            OnPropertyChanged(nameof(SelectionCount9593));
         }
     }
 }
