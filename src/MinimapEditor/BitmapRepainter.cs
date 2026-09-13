@@ -1,5 +1,6 @@
 ﻿using LibDQB;
 using LibDQB.DQB2Minimap;
+using MinimapEditor.Tiling;
 using MinimapEditor.Viewmodels;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -10,70 +11,72 @@ namespace MinimapEditor;
 /// Creates and manages the WriteableBitmaps having the same size which will
 /// be stacked on top of each other to produce the main UI.
 /// </summary>
-sealed class BitmapRepainter<TLayer> : MapEditorViewmodel.IRepainter
+sealed class BitmapRepainter : MapEditorViewmodel.IRepainter
     , WpfMinimapGrid.IRepainter
     , SelectionGridDecorator.IRepainter
     , MapEditorViewmodel.IImageExporter
-    where TLayer : BitmapSource
 {
-    public interface ITilesheet
+    private readonly MinimapTileCombiner tileCombinator;
+    private readonly TileCanvas minimapLayer;
+    private readonly TileCanvas layerSelectionA;
+    private readonly TileCanvas layerSelectionB;
+    private readonly ISelectionTilesheet selectionTilesheet;
+
+    public BitmapRepainter(MinimapTileCombiner combinator, ISelectionTilesheet selectionTilesheet)
     {
-        /// <summary>
-        /// Create a new image that can hold exactly the number of tiles specified
-        /// by <paramref name="width"/> and <paramref name="height"/>.
-        /// </summary>
-        TLayer CreateLayer(int width, int height);
+        this.tileCombinator = combinator;
+        this.selectionTilesheet = selectionTilesheet;
 
-        void UpdateBaseTileLayer(TLayer layer, IReadOnlyGrid<MinimapTile> map, Rect dirty);
-        void UpdateOverlayLayer(TLayer layer, IReadOnlyGrid<MinimapTile> map, Rect dirty);
-        void UpdateVisibilityLayer(TLayer layer, IReadOnlyGrid<MinimapTile> map, Rect dirty);
-        void UpdateSelectionLayer(TLayer layerA, TLayer layerB, IReadOnlyGrid<bool> selectionGrid, Rect dirty);
-    }
-
-    private readonly ITilesheet tilesheet;
-    private readonly TLayer layerBase;
-    private readonly TLayer layerOverlay;
-    private readonly TLayer layerVisibility;
-    // Selection will be drawn on 2 layers. The second (layer B) will blink so that it appears
-    // to be toggling between layer A and layer B.
-    private readonly TLayer layerSelectionA;
-    private readonly TLayer layerSelectionB;
-
-    public BitmapRepainter(ITilesheet tilesheet)
-    {
-        this.tilesheet = tilesheet;
-        const int size = 256;
-        layerBase = tilesheet.CreateLayer(size, size);
-        layerOverlay = tilesheet.CreateLayer(size, size);
-        layerVisibility = tilesheet.CreateLayer(size, size);
-        layerSelectionA = tilesheet.CreateLayer(size, size);
-        layerSelectionB = tilesheet.CreateLayer(size, size);
+        var numTiles = new XZ(256, 256);
+        minimapLayer = TileCanvas.Create(tileCombinator.TileSize, numTiles);
+        layerSelectionA = TileCanvas.Create(selectionTilesheet.TileSize, numTiles);
+        layerSelectionB = TileCanvas.Create(selectionTilesheet.TileSize, numTiles);
     }
 
     IEnumerable<ImageSource> MapEditorViewmodel.IRepainter.AllLayers()
     {
-        yield return layerBase;
-        yield return layerOverlay;
-        yield return layerVisibility;
-        yield return layerSelectionA;
-        yield return layerSelectionB;
+        yield return minimapLayer.Bitmap;
+        yield return layerSelectionA.Bitmap;
+        yield return layerSelectionB.Bitmap;
     }
 
     void WpfMinimapGrid.IRepainter.Repaint(IReadOnlyGrid<MinimapTile> grid, Rect dirty)
     {
-        tilesheet.UpdateBaseTileLayer(layerBase, grid, dirty);
-        tilesheet.UpdateOverlayLayer(layerOverlay, grid, dirty);
-        tilesheet.UpdateVisibilityLayer(layerVisibility, grid, dirty);
+        using var writer = minimapLayer.MakeWriter();
+        foreach (var xz in dirty.Enumerate())
+        {
+            var tile = grid.Get(xz);
+            var bytes = this.tileCombinator.Get(tile);
+            writer.DrawTile(bytes, xz);
+        }
     }
 
     void SelectionGridDecorator.IRepainter.Repaint(IReadOnlyGrid<bool> selectionGrid, Rect dirty)
     {
-        tilesheet.UpdateSelectionLayer(layerSelectionA, layerSelectionB, selectionGrid, dirty);
+        var selectionTileA = selectionTilesheet.SelectionTileA();
+        var selectionTileB = selectionTilesheet.SelectionTileB();
+        var transparentTile = selectionTilesheet.TransparentTile();
+
+        using var writerA = layerSelectionA.MakeWriter();
+        using var writerB = layerSelectionB.MakeWriter();
+
+        foreach (var xz in dirty.Enumerate())
+        {
+            bool isSelected = selectionGrid.Get(xz);
+            var tileA = isSelected ? selectionTileA : transparentTile;
+            var tileB = isSelected ? selectionTileB : transparentTile;
+            if ((xz.X + xz.Z) % 2 == 0)
+            {
+                (tileA, tileB) = (tileB, tileA);
+            }
+            writerA.DrawTile(tileA, xz);
+            writerB.DrawTile(tileB, xz);
+        }
     }
 
     BitmapFrame MapEditorViewmodel.IImageExporter.ExportFullImage()
     {
-        return Composite(layerBase, layerOverlay, layerVisibility);
+        return BitmapFrame.Create(minimapLayer.Bitmap);
     }
 
     BitmapFrame MapEditorViewmodel.IImageExporter.ExportCroppedImage(IReadOnlyGrid<MinimapTile> grid)
@@ -82,34 +85,16 @@ sealed class BitmapRepainter<TLayer> : MapEditorViewmodel.IRepainter
         int width = grid.Bounds.Size.X;
         int height = grid.Bounds.Size.Z;
 
-        var layerBase = tilesheet.CreateLayer(width, height);
-        tilesheet.UpdateBaseTileLayer(layerBase, grid, grid.Bounds);
-
-        var layerOverlay = tilesheet.CreateLayer(width, height);
-        tilesheet.UpdateOverlayLayer(layerOverlay, grid, grid.Bounds);
-
-        var layerVisibility = tilesheet.CreateLayer(width, height);
-        tilesheet.UpdateVisibilityLayer(layerVisibility, grid, grid.Bounds);
-
-        return Composite(layerBase, layerOverlay, layerVisibility);
-    }
-
-    private static BitmapFrame Composite(params TLayer[] layers)
-    {
-        int width = layers[0].PixelWidth;
-        int height = layers[0].PixelHeight;
-
-        var visual = new DrawingVisual();
-        using (var dc = visual.RenderOpen())
+        var canvas = TileCanvas.Create(tileCombinator.TileSize, grid.Bounds.Size);
+        using (var writer = canvas.MakeWriter())
         {
-            foreach (var bitmap in layers)
+            foreach (var xz in grid.Bounds.Enumerate())
             {
-                dc.DrawImage(bitmap, new System.Windows.Rect(0, 0, width, height));
+                var tile = tileCombinator.Get(grid.Get(xz));
+                writer.DrawTile(tile, xz);
             }
         }
 
-        var composite = new RenderTargetBitmap(width, height, layers[0].DpiX, layers[0].DpiY, PixelFormats.Pbgra32);
-        composite.Render(visual);
-        return BitmapFrame.Create(composite);
+        return BitmapFrame.Create(canvas.Bitmap);
     }
 }

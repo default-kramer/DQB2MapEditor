@@ -2,8 +2,8 @@
 using LibDQB.B2;
 using LibDQB.B2.Records;
 using LibDQB.DQB2Minimap;
+using MinimapEditor.Tiling;
 using System.Windows.Input;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
 namespace MinimapEditor.Viewmodels;
@@ -106,7 +106,7 @@ public sealed class IslandViewmodel : ViewmodelBase
             IslandVM = this,
         };
 
-        var repainter = new BitmapRepainter<WriteableBitmap>(Tilesheet);
+        var repainter = new BitmapRepainter(Tilesheet.Combiner.Value, Tilesheet);
 
         var tileDecorator = new WpfMinimapGrid
         {

@@ -1,5 +1,6 @@
 ﻿using LibDQB.B2;
 using Microsoft.Win32;
+using MinimapEditor.Tiling;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;

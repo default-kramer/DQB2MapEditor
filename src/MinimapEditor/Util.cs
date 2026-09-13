@@ -32,4 +32,6 @@ static class Util
         DependencyProperty.RegisterAttached("IsActive2987", typeof(bool), typeof(Util));
     public static bool GetIsActive2987(DependencyObject x) => (bool)x.GetValue(IsActive2987Property);
     public static void SetIsActive2987(DependencyObject x, bool value) => x.SetValue(IsActive2987Property, value);
+
+    public static T[] Array<T>(params T[] items) => items;
 }
